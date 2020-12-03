@@ -1,0 +1,9 @@
+/analysis/setFileName {eKin}_B3A
+/gun/energy {eKin} MeV
+/run/beamOn 4000
+
+
+
+
+
+
