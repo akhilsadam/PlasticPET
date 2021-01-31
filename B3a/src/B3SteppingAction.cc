@@ -307,7 +307,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 	//-----------Histograms----------
 	G4String vol = prePoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
-	if (prePoint->GetStepStatus() == fGeomBoundary)
+	if ((prePoint->GetStepStatus() == fGeomBoundary) && (prim.compare("opticalphoton")==0))
 	{
 		if(vol.compare("detVOLL")==0)
 		{	
@@ -316,6 +316,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
 			analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
 			analysisManager->FillH1(17,  lambdaP, 1);
+			fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
 		}
 		else if (vol.compare("detVOLR")==0)
 		{
@@ -324,6 +325,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
 			analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
 			analysisManager->FillH1(18,  lambdaP, 1);
+			fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
 		}
 	}
 

@@ -67,7 +67,7 @@ class B3aEventAction : public G4UserEventAction
     G4int particleIDnum;
     G4int gammaID;
     G4double threshold = 0.00001;
-
+    vector<vector<double>> photonSiPMData; //(X,Y,Z,T,L)
   private:
     B3aRunAction*  fRunAction;
     B3PrimaryGeneratorAction* fpga;

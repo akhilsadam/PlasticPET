@@ -271,7 +271,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       }
       else 
       {
-        G4cout << "Non-gamma parented photon" << G4endl;
+        //G4cout << "Non-gamma parented photon" << G4endl;
         break;
       }
     }
@@ -306,6 +306,20 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   beamInteract << endl;
   beamInteract.close(); 
 
+
+  std::ofstream photonSiPM("photonSiPMData.txt", std::ios_base::app);
+  for(vector<double> pos : photonSiPMData)
+  {
+    for(int u =0; u<pos.size(); u++)
+    {
+      photonSiPM << pos[u] << " ";
+    }
+    photonSiPM << "|";
+  }
+  photonSiPM << endl;
+  photonSiPM.close();
+
+
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();
   analysisManager->GetH2(17)->reset();
@@ -321,6 +335,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   vertexPosition.clear();
   photonIDList.clear();
   particleIDnum = 0;
+  photonSiPMData.clear();
   foo22.unlock();
   barL22.unlock();
 
