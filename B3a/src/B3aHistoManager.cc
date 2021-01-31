@@ -333,7 +333,7 @@ G4int ih6 = analysisManager->CreateH3(title[38], title[38], 50, (-Dx/2), (Dx/2),
             brem  = name + " Bremsstrahlung";
             n2 = to_string(i)+to_string(j) + cell + "-Strips";
             nR = to_string(i)+to_string(j) + cell + "-PDRatio";
-        
+            //nZP = to_string(i)+to_string(j) + cell + "-ZPredict";
         ih5 = analysisManager->CreateH1(name, name, nb, ni, na);
     	analysisManager->SetH1Activation(ih5, true);
         ih5 = analysisManager->CreateH1(compt, compt, nb, ni, na);
@@ -346,12 +346,38 @@ G4int ih6 = analysisManager->CreateH3(title[38], title[38], 50, (-Dx/2), (Dx/2),
     	analysisManager->SetH1Activation(ih5, true);
         ih5 = analysisManager->CreateH1(n2, n2, nb, ni, nax); 
     	analysisManager->SetH1Activation(ih5, true);
-        ih5 = analysisManager->CreateH2(nR, nR, nb, ni,nax,nb,0,0.2); 
+        ih5 = analysisManager->CreateH2(nR, nR, nb, ni,nax,nb,0,0.2); // PD Ratio
     	analysisManager->SetH2Activation(ih5, true);
         //G4cout << "finished stringing" << G4endl;
     }
     
  }
+G4String nZP = "(L-R) Photon Ratio as Z-Predictor (ln(LR Ratio) by m)";
+// (L-R) Photon Ratio as Z-Predictor requires #define ZPredictorTest for useful data
+ih5 = analysisManager->CreateH2(nZP, nZP, nb, 0, length_D/m, 2*nb, -1 ,2); // m
+analysisManager->SetH2Activation(ih5, true);
+nZP = "(L-R) Photon Ratio as Z-Predictor";
+// (L-R) Photon Ratio as Z-Predictor requires #define ZPredictorTest for useful data
+ih5 = analysisManager->CreateH1(nZP, nZP, 8*nb, -2 ,2); // m
+analysisManager->SetH1Activation(ih5, true);
+nZP = "(L-R) Photon Ratio as Y-Predictor (ln(LR Ratio) by m)";
+// (L-R) Photon Ratio as Z-Predictor requires #define YPredictorTest for useful data
+ih5 = analysisManager->CreateH2(nZP, nZP, nb, -length_Y/(2*cm), length_Y/(2*cm), 2*nb, -10 ,10); // cm
+analysisManager->SetH2Activation(ih5, true);
+nZP = "(L-R) Photon Ratio as Y-Predictor";
+// (L-R) Photon Ratio as Y-Predictor requires #define YPredictorTest for useful data
+ih5 = analysisManager->CreateH1(nZP, nZP, 8*nb, -10 ,10); // cm
+analysisManager->SetH1Activation(ih5, true);
+nZP = "(L-R) Photon Ratio as X-Predictor (ln(LR Ratio) by m)";
+// (L-R) Photon Ratio as X-Predictor
+ih5 = analysisManager->CreateH2(nZP, nZP, nb, -length_X/(2*cm), length_X/(2*cm), 2*nb, -10 ,10); // cm
+analysisManager->SetH2Activation(ih5, true);
+nZP = "(L-R) Photon Ratio as X-Predictor";
+// (L-R) Photon Ratio as X-Predictor 
+ih5 = analysisManager->CreateH1(nZP, nZP, 8*nb, -10 ,10); // cm
+analysisManager->SetH1Activation(ih5, true);
+
+
  ///RIGHT
 
 

@@ -65,7 +65,7 @@ void B3aActionInitialization::Build() const
   B3aRunAction* runAction = new B3aRunAction(fDetector,fprimaryGen);
   SetUserAction(runAction);
 
-  B3aEventAction* eventAction = new B3aEventAction(runAction);
+  B3aEventAction* eventAction = new B3aEventAction(runAction,fprimaryGen);
   SetUserAction(eventAction);
   SetUserAction(fprimaryGen);
   SetUserAction(new B3StackingAction);

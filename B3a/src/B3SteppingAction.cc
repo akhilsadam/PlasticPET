@@ -71,6 +71,11 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
  	std::lock(foo2,barL2);
  	G4double edep = (step->GetTotalEnergyDeposit())/keV;
 	G4Track* track = step->GetTrack();
+	if(fEventAction->parentTrack.find(track->GetTrackID())==fEventAction->parentTrack.end())
+	{
+		fEventAction->parentTrack[track->GetTrackID()] = track->GetParentID();
+		fEventAction->vertexPosition[track->GetTrackID()] = track->GetVertexPosition();
+	}
  	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();     
 
  	//longitudinal profile of deposited energy
@@ -96,13 +101,6 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
  	analysisManager->FillH1(0, yshifted, edep);//y,edep
  	analysisManager->FillH2(0, xshifted, yshifted, edep);
  	analysisManager->FillH3(0, xshifted, yshifted, zshifted, edep);
-
-	G4double Ox = -2.58*cm;
-	G4double Oy = 4.83*cm;
-	G4double Dx = 7.74*cm;
-	G4double Dy = 10.32*cm;
-	G4double Dz = 100*cm;
-	G4double Oz = Dz/2;
 
 	if(track->GetParticleDefinition()->GetParticleName() == "opticalphoton")
 	{
@@ -159,11 +157,30 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		const G4DynamicParticle* pp = (const G4DynamicParticle*) ptrG4Track->GetDynamicParticle();
 		const G4ParticleDefinition* pd = (const G4ParticleDefinition*) pp->GetParticleDefinition();
 		const std::string pdVar = pd->GetParticleName();
-	
+
+		
+		ptrG4Track->SetTrackID(fEventAction->particleIDnum);
+		fEventAction->particleIDnum = fEventAction->particleIDnum + 1;
+
 		//G4cout << "-- Secondary: " << pdVar << " || Es: " << (pp->GetKineticEnergy()/MeV) << G4endl;
 		//-----------Histograms----------
 		if(pdVar.compare("opticalphoton")==0)
 		{
+			//G4String creatorName = ptrG4Track->GetCreatorProcess()->GetProcessName();
+			//if(creatorName != "Scintillation")
+			//G4cout << creatorName << G4endl;
+			G4int trackid = ptrG4Track->GetTrackID();
+			if(count(fEventAction->photonIDList.begin(),fEventAction->photonIDList.end(),trackid))
+			{
+				G4cout << "photonIDList ERROR" << G4endl;
+				//fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
+			}
+			else
+			{
+				fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
+			}
+
+
 			//G4cout << "Filled Photon Deposition" << G4endl;
 			analysisManager->FillH1(8, (x-Ox), 1);
 			analysisManager->FillH2(1, (x-Ox),(y-Oy), 1);
@@ -241,10 +258,11 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 	}
 
 
-	std::string prim = step->GetTrack()->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
-	G4double Eprim = (step->GetTrack()->GetTotalEnergy()/keV); 
+	std::string prim = track->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
+	G4double Eprim = (track->GetTotalEnergy()/keV); 
 	if(prim.compare("gamma")==0)
 	{
+		fEventAction->gammaID = track->GetTrackID();
 		/*if(Eprim <=0)
 		{
 			Eprim = 0;
@@ -260,17 +278,20 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			if(ps)
 			{
 				G4String psNm = ps->GetProcessName();
+				
 				//G4cout<<(ps->GetProcessName())<<G4endl;
 				analysisManager->FillH2(14, (x-Ox),(y-Oy), 1);
+				fEventAction->interactionPos.push_back({x-Ox,y-Oy,z,0,postPoint->GetGlobalTime()/ns,edep});//postPoint->GetLocalTime()
 				if(psNm.compare("phot")==0)
 				{
 					analysisManager->FillH2(15, (x-Ox),(y-Oy), 1);
-					
+					fEventAction->interactionPosPhot.push_back(G4ThreeVector(x-Ox,y-Oy,z));
 				}
 				else if(psNm.compare("compt")==0)
 				{
 					//COMPTON
 					analysisManager->FillH2(16, (x-Ox),(y-Oy), 1);
+					fEventAction->interactionPosCompt.push_back(G4ThreeVector(x-Ox,y-Oy,z));
 				}
 				else
 				{

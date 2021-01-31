@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a
+CMAKE_SOURCE_DIR = /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a/build
+CMAKE_BINARY_DIR = /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build
 
 # Utility rule file for B3a.
 
@@ -71,6 +71,6 @@ CMakeFiles/B3a.dir/clean:
 .PHONY : CMakeFiles/B3a.dir/clean
 
 CMakeFiles/B3a.dir/depend:
-	cd /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a/build /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a/build /home/mitt-unix/Bureau/Desktop/Geant4/B3test/B3a/build/CMakeFiles/B3a.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build /home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/B3a.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/B3a.dir/depend
 

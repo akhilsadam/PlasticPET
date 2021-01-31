@@ -32,9 +32,12 @@
 
 #include "G4UserEventAction.hh"
 #include "globals.hh"
+#include <vector>
+#include "G4ThreeVector.hh"
+using namespace std;
 
 class B3aRunAction;
-
+class B3PrimaryGeneratorAction;
 /// Event action class
 ///
 /// In EndOfEventAction() there is collected information event per event 
@@ -44,7 +47,7 @@ class B3aRunAction;
 class B3aEventAction : public G4UserEventAction
 {
   public:
-    B3aEventAction(B3aRunAction* runAction);
+    B3aEventAction(B3aRunAction* runAction, B3PrimaryGeneratorAction* pgAction);
     virtual ~B3aEventAction();
 
     virtual void  BeginOfEventAction(const G4Event*);
@@ -53,9 +56,21 @@ class B3aEventAction : public G4UserEventAction
     
     void AddEdep(G4double Edep)     {fTotalEnergyDeposit += Edep;};      
     G4double GetEnergyDeposit()     {return fTotalEnergyDeposit;};   
-    
+
+    vector<G4ThreeVector> interactionPosPhot;
+    vector<G4ThreeVector> interactionPosCompt;
+    vector<vector<double>> interactionPos;
+    vector<vector<double>> interactionPosTrack;
+    map<G4int,G4int> parentTrack;
+    map<G4int,G4ThreeVector> vertexPosition;
+    vector<G4int> photonIDList;
+    G4int particleIDnum;
+    G4int gammaID;
+    G4double threshold = 0.00001;
+
   private:
     B3aRunAction*  fRunAction;
+    B3PrimaryGeneratorAction* fpga;
     G4int fCollID_cryst;
     G4int fCollID_patient;   
     G4double fTotalEnergyDeposit;   // Energy deposited 

@@ -29,6 +29,7 @@
 #include "Version.hh"
 #include "B3aEventAction.hh"
 #include "B3aRunAction.hh"
+#include "B3PrimaryGeneratorAction.hh"
 #include "B3Analysis.hh"
 #include "B3Hit.hh"
 
@@ -38,16 +39,27 @@
 
 #include "G4EventManager.hh"
 
+
 #include "G4SDManager.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4THitsMap.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 
+#include <iostream>
+#include <fstream>
+#include <istream>
+//#include "../cnpy-master/cnpy.h"
+#include "../cnpy-master/cnpy.cpp"
+#include <cstdlib>
+#include <map>
+
+
 /*G4int fCollID_cryst_p;
 G4int fCollID_cryst_ep;
 G4int fCollID_cryst_en;
 G4int fCollID_cryst_y;*/
+using namespace std;
 
 G4int detL_npho;
 G4int detR_npho;
@@ -55,9 +67,10 @@ std::mutex foo22;
 std::mutex barL22;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B3aEventAction::B3aEventAction(B3aRunAction* runAction)
+B3aEventAction::B3aEventAction(B3aRunAction* runAction,B3PrimaryGeneratorAction* pgAction)
  : G4UserEventAction(), 
    fRunAction(runAction),
+   fpga(pgAction),
    fCollID_cryst(-1),
 /* do we need this ??
    fCollID_cryst_p(-1),
@@ -91,12 +104,50 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   G4int left=0;
   G4int right=0;
   G4int nevents = fRunAction->GetNevents();
-
+  
+  G4int totalPhot=0;
   G4int scintiPhot=0;
   G4int id = 25;
   G4int id2D = 18;
   G4int leftT = 0;
   G4int rightT = 0;
+  //G4double firedZ = evt->GetPrimaryVertex(0)->GetZ0();
+  //G4double firedX = evt->GetPrimaryVertex(0)->GetX0()+2.58*cm;
+  //G4double firedY = evt->GetPrimaryVertex(0)->GetY0()-4.83*cm;
+  G4double firedZ =0;
+  G4double firedX =0;
+  G4double firedY =0;
+
+  const int xvl = 3;
+  const int yvl = 16;
+  const int zvl = 3;
+  vector<double> eventData(zvl*yvl*xvl); //shape = {z,y,x}
+  G4PrimaryVertex* pv = evt->GetPrimaryVertex(0);
+  G4ThreeVector pdir = fpga->GetParticleGun()->GetParticleMomentumDirection();
+  vector<double> beamData={pv->GetX0(),pv->GetY0(),pv->GetZ0(),pdir.x(),pdir.y(),pdir.z()}; //shape = {z,y,x}
+
+  if(interactionPosPhot.size() > 0)
+  {
+    firedZ =interactionPosPhot[0].z();
+    firedX =interactionPosPhot[0].x();
+    firedY =interactionPosPhot[0].y();
+  }
+
+  G4double delX = (length_X/nx);
+  G4double delY = (length_Y/ny);
+  G4double p0X = -(length_X/2);
+  G4double p0Y = -(length_Y/2);
+  G4double predX =0;
+  G4double predY =0;
+
+
+  #ifdef ZPredictorTest
+    G4cout << "FIREDZ - ZPOS: " << firedZ << G4endl;
+  #endif
+  #ifdef YPredictorTest
+    G4cout << "FIREDY - YPOS: " << firedY << G4endl;
+    G4cout << "FIREDX - XPOS: " << firedX << G4endl;
+  #endif
 
   for(int x = 0; x<(nx); x++)
   {
@@ -105,6 +156,9 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
       right = (G4int) analysisManager->GetH2(5)->bin_entries((x),(y)); //detectors
       scintiPhot = (G4int) analysisManager->GetH2(17)->bin_entries((x),(y)); //scintillator
+      eventData[(0*nx*ny)+((ny-1-y)*nx)+x]=(left);
+      eventData[(1*nx*ny)+((ny-1-y)*nx)+x]=(scintiPhot);
+      eventData[(2*nx*ny)+((ny-1-y)*nx)+x]=(right);
       entry = left + right; //detectors
       //G4cout << "ENTRY: " << entry << "X " << x << "Y " << y << G4endl;
       if ((entry > 0) && (nevents !=0)) //detectors
@@ -117,6 +171,9 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       {
         analysisManager->FillH1(id+5, (scintiPhot) );
         analysisManager->FillH2(id2D, (scintiPhot), ((1.0*entry)/scintiPhot) );
+        predY = predY + (scintiPhot*(p0Y+(delY*y)));
+        predX = predX + (scintiPhot*(p0X+(delX*x)));
+        totalPhot = totalPhot + scintiPhot;
       }
       analysisManager->FillH2(12, (x),(y), (left) );
       analysisManager->FillH2(13, (x),(y), (right) );
@@ -133,14 +190,137 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   {
     analysisManager->FillH1(10, 0.5, (1.0/nevents) );
   }
-  analysisManager->FillH1(23, leftT);
+  analysisManager->FillH1(23, leftT);//left and right aggregate histograms
   analysisManager->FillH1(24, rightT);
+  //Predict POSITION (position resolution)
+
+    G4double zpred = ((att_len/(16))*log(double(leftT)/double(rightT))  + (length_D/(2)));
+    predY  = predY/double(totalPhot);
+    predX  = predX/double(totalPhot);
+    if(interactionPosPhot.size() > 0)
+  {
+
+
+    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Z-Predictor (ln(LR Ratio) by m)"),firedZ/m, zpred/m);//Z-predictor histogram
+    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Z-Predictor"), (zpred - firedZ)/m);//Z-predictor histogram
+    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Y-Predictor (ln(LR Ratio) by m)"),firedY/cm, predY/cm);//Y-predictor histogram
+    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Y-Predictor"), (predY - firedY)/cm);//Y-predictor histogram
+    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as X-Predictor (ln(LR Ratio) by m)"),firedX/cm, predX/cm);//Z-predictor histogram
+    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as X-Predictor"), (predX - firedX)/cm);//Z-predictor histogram
+
+  }
+
+  //data dump
+  int evtId = evt->GetEventID();
+  //cnpy::npz_save("posRes.npz","data",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+  cnpy::npy_save("photonCounts.npy",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+  cnpy::npy_save("beamData.npy",&beamData[0],{1,2,3},"a"); //event location and momentum direction
+  std::ofstream beamInteract("beamInteract.txt", std::ios_base::app);
+  for(int i = 0; i<3;i++)
+  {
+    for(G4ThreeVector pos : interactionPosPhot)
+    {
+      switch (i)
+      {
+        case 0:
+          beamInteract << pos.x() << " ";
+          break;
+        case 1:
+          beamInteract << pos.y() << " ";
+          break;
+        case 2:
+          beamInteract << pos.z() << " ";
+          break;
+      }
+    }
+    beamInteract << endl;
+  }
+  for(int i = 0; i<3;i++)
+  {
+    for(G4ThreeVector pos : interactionPosCompt)
+    {
+      switch (i)
+      {
+        case 0:
+          beamInteract << pos.x() << " ";
+          break;
+        case 1:
+          beamInteract << pos.y() << " ";
+          break;
+        case 2:
+          beamInteract << pos.z() << " ";
+          break;
+      }
+    }
+    beamInteract << endl;
+  }
+
+  //INTERACTION pos - photon counting
+  G4cout << " GAMMA ID = " << gammaID << G4endl;
+  vector<G4double> diffs;
+  for(int i = 0; i<photonIDList.size();i++)
+  {
+    G4int photon = photonIDList[i];
+    G4int parent = photon;
+    while(parent != gammaID)
+    {
+      if(parentTrack.find(parent)!=parentTrack.end())
+      {
+        parent = parentTrack.at(parent);
+        photon = parent;
+      }
+      else 
+      {
+        G4cout << "Non-gamma parented photon" << G4endl;
+        break;
+      }
+    }
+    //now parent = gammaID, so photon is first secondary-track 
+    G4ThreeVector vertexpos = vertexPosition[photon];
+    G4double x = vertexpos.x()-Ox;
+    G4double y = vertexpos.y()-Oy;
+    G4double z = vertexpos.z();
+    //G4cout << "(" << x <<" "<<y<<" "<<z<<")";
+    for(int i = 0; i < interactionPos.size();i++)
+    {
+      vector<G4double> pos = interactionPos[i];
+      G4double diff = pow((pos[0]-x),2)+pow((pos[1]-y),2)+pow((pos[2]-z),2);
+      diffs.push_back(diff);
+      //G4cout << diff << " ";
+    } 
+    int min_i = min_element(diffs.begin(), diffs.end())-diffs.begin();
+    interactionPos[min_i][3] = interactionPos[min_i][3] + 1;
+    diffs.clear();
+  }
+
+
+
+  for(int i = 0; i<5;i++)
+  {
+    for(vector<G4double> pos : interactionPos)
+    {
+      beamInteract << pos[i] << " ";
+    }
+    beamInteract << endl;
+  }
+  beamInteract << endl;
+  beamInteract.close(); 
 
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();
   analysisManager->GetH2(17)->reset();
   analysisManager->GetH1(9)->reset();
-
+  /* for(int i = 0; i<photonIDList.size();i++)
+  {
+    cout << photonIDList[i]<<" ";
+  }*/
+  interactionPos.clear();
+  interactionPosPhot.clear();
+  interactionPosCompt.clear();
+  parentTrack.clear();
+  vertexPosition.clear();
+  photonIDList.clear();
+  particleIDnum = 0;
   foo22.unlock();
   barL22.unlock();
 

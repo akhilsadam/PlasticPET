@@ -123,7 +123,17 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
   //create vertex
   //
   #ifdef MultipleStripCell
-  G4double x0  = 30*cm, y0  = (4.83+(2.56/2))*cm, z0  = length_D/2;
+  G4double x0  = 30*cm;
+    #ifndef ZPredictorTest
+    G4double z0  = length_D/2;
+    #else
+    G4double z0  = (G4UniformRand()*length_D);
+    #endif
+    #ifndef YPredictorTest
+    G4double y0  = (4.83+(2.56/2))*cm;
+    #else
+    G4double y0  = (4.83*cm)+(length_Y*(G4UniformRand()-0.5));
+    #endif
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   fParticleGun->GeneratePrimaryVertex(anEvent);
   #endif

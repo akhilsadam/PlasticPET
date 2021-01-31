@@ -20,11 +20,12 @@ endif()
 # Setup Geant4 include directories and compile definitions
 # Setup include directory for this project
 #
+set(CMAKE_CXX "g++")
+set(CMAKE_CXX_FLAGS "-g -std=c++17 -O0 -w") #turn off -w to see warnings
 include(${Geant4_USE_FILE})
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/cnpy_master)
 include_directories(/home/mitt-unix/Desktop/Geant4/geant4-10.6.0/source/persistency/gdml/include)
-
-set(CMAKE_CXX_FLAGS "-g -O0")
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
