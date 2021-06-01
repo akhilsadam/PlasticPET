@@ -57,6 +57,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4Material* Vikuiti;
 	G4Material* Air;
 	G4Material* TPB;
+	G4Material* detMAT;
 	double rho_pvt = 1.023*g/cm3;
 	void UPDATE_GEO_MPT()
 	{
@@ -245,7 +246,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4NistManager* man = G4NistManager::Instance();
 
 	Air = man->FindOrBuildMaterial("G4_AIR");
-
+	detMAT = man->FindOrBuildMaterial("G4_AIR");
   	G4bool isotopes = false;
   
   	G4Element*  H = man->FindOrBuildElement("H" , isotopes);
@@ -388,12 +389,25 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4double refractive_index_air[n] = {1.00029,1.00029,1.00029,1.00029,1.00029,1.00029};
 
 	G4double fast[n] = {0.032258,0.258064,0.322581,0.225806,0.129032,0.032258};//{0.1,0.8,1,0.7,0.4,0.1}
+	G4double reflectivity_det[n] = {0,0,0,0,0,0};
 
 	#ifndef SSRefractionTest
-		G4double reflectivity_vk[n] = {.9150,.9334,.9452,.9566,.9652,.9698}; //using ESR_Clear. DRP:{0.9643,0.9680,0.9698,0.9743,0.9761,0.9798};
+		#ifdef ULTRAreflective
+			G4double reflectivity_vk[n] = {1,1,1,1,1,1};
+		#else
+			G4double reflectivity_vk[n] = {.9150,.9334,.9452,.9566,.9652,.9698}; //using ESR_Clear. DRP:{0.9643,0.9680,0.9698,0.9743,0.9761,0.9798};
+		#endif
 	#else
 		G4double reflectivity_vk[n] = {1,1,1,1,1,1};
 		//G4double reflectivity_vk[n] = {0,0,0,0,0,0}; //using ESR_Clear. DRP:{0.9643,0.9680,0.9698,0.9743,0.9761,0.9798};
+	#endif
+
+
+	#ifndef ULTRAreflective
+	//G4double reflectivity_ej[n] =  {.9150,.9334,.9452,.9566,.9652,.9698}; //USING VK for now!!
+	G4double reflectivity_ej[n] =  {1,1,1,1,1,1};
+	#else
+	G4double reflectivity_ej[n] =  {1,1,1,1,1,1};
 	#endif
 	
 	G4double efficiency[n] = {1.0,1.0,1.0,1.0,1.0,1.0};
@@ -401,6 +415,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4MaterialPropertiesTable* airMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* vkMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* scintMPT = new G4MaterialPropertiesTable();
+	G4MaterialPropertiesTable* detMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* surfVKMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* surfEJMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* tpbMPT = new G4MaterialPropertiesTable();
@@ -408,6 +423,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	airMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_air,n);
 	vkMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_vk,n);
+	detMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_air,n);
 	vkMPT->AddProperty("ABSLENGTH", PhotonEnergy,att_length_vk,n);
 	scintMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_ej,n);
 
@@ -444,6 +460,10 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	EJ208->SetMaterialPropertiesTable(scintMPT);
 	Vikuiti->SetMaterialPropertiesTable(vkMPT);
 
+
+	detMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_det, n);
+	detMAT->SetMaterialPropertiesTable(detMPT);
+
 	/*if(MPT_UPDATE>0)
 	{
 		WorldMod();
@@ -451,7 +471,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	}*/
 //----------------------------------------------------------------------SETSURF----------------------------------------------------////
 	surfVKMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_vk, n);
-	surfEJMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_vk, n); // WHAT is the EJ reflectivity?
+	surfEJMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_ej, n); // WHAT is the EJ reflectivity?
 	surfTPBMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_tpb, n2); 
 	surfVKMPT->AddProperty("EFFICIENCY", PhotonEnergy, efficiency, n);
 	surfEJMPT->AddProperty("EFFICIENCY", PhotonEnergy, efficiency, n);
@@ -509,8 +529,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 		EJ208 = lyse->LYSOmat();
 		//printf("\n\n LYSO NAME: %s",EJ208->GetName()); HAS AN ERROR
 		surfEJ = lyse->LYSOsurf();
-	#endif
-
+	#endif	
 //----------------------------------------------------------------------Geometry---------------------------------------------------////
 
 	G4VisAttributes* red_col = new G4VisAttributes(G4Color(0.6,0.4,0.4,1));
@@ -563,9 +582,11 @@ class GDMLDetectorConstruction : public DetectorConstruction
         //sprintf(a,"%d", i);
         //strcat(a,")");
         VKvol = parser.GetVolume(a);
-	  	VKvol->SetMaterial(Vikuiti);
-	  	VKvol->SetVisAttributes (blue_col);
-	  	VKsurf = new G4LogicalSkinSurface("surfVK_L",VKvol, surfVK);
+		#ifndef DISABLEVK
+			VKvol->SetMaterial(Vikuiti);
+			VKvol->SetVisAttributes (blue_col);
+			VKsurf = new G4LogicalSkinSurface("surfVK_L",VKvol, surfVK);
+		#endif
     }
 
 	//--------- Detecting (SiPM like) Endcap Geometry -------------//\\
@@ -573,8 +594,8 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4double dX = 7.74*cm; G4double dY = 10.32*cm; G4double dZ = 1*cm;
 	G4Box* det = new G4Box("det", dX/2, dY/2, dZ/2);
 	//G4Box* ydet = new G4Box("ydet", 0.5*cm, dY/2, length_D/2);
-	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,EJ208,"detVOLR");
-	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,EJ208,"detVOLL");
+	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,detMAT,"detVOLR");
+	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,detMAT,"detVOLL");
 	//G4LogicalVolume* logicDetY = new G4LogicalVolume(ydet,EJ208,"detVOLY");
 	logicDetR->SetVisAttributes (det_col);
 	logicDetL->SetVisAttributes (det_col);
@@ -671,8 +692,8 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4ThreeVector pos = G4ThreeVector(0*cm,0*cm,-0.5001*cm);
 	G4ThreeVector pos2 = G4ThreeVector(0*cm,0*cm,(dY + 0.5001*cm));
 	#endif
-	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,EJ208,"detVOLR");
-	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,EJ208,"detVOLL");
+	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,detMAT,"detVOLR");
+	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,detMAT,"detVOLL");
 	logicDetR->SetVisAttributes (det_col);
 	logicDetL->SetVisAttributes (det_col);
 	new G4PVPlacement(0,pos,"det",logicDetR,World, false,0,fCheckOverlaps);       // checking overlaps 

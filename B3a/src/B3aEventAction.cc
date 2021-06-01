@@ -10,15 +10,15 @@
 // *                                                                  *
 // * Neither the authors of this software system, nor their employing *
 // * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
+// * work  make  aNy representation or  warranty, express or implied, *
+// * regarding  this  software system or assume aNy liability for its *
 // * use.  Please see the license in the file  LICENSE  and URL above *
 // * for the full disclaimer and the limitation of liability.         *
 // *                                                                  *
 // * This  code  implementation is the result of  the  scientific and *
 // * technical work of the GEANT4 collaboration.                      *
 // * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
+// * aNy work based  on the software)  you  agree  to acknowledge its *
 // * use  in  resulting  scientific  publications,  and indicate your *
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
@@ -53,7 +53,6 @@
 #include "../cnpy-master/cnpy.cpp"
 #include <cstdlib>
 #include <map>
-
 
 /*G4int fCollID_cryst_p;
 G4int fCollID_cryst_ep;
@@ -96,10 +95,6 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
   std::lock(foo22,barL22);
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  G4int nx = 3;
-  G4int ny = 16;
-  G4double Dx = 7.74*cm;
-  G4double Dy = 10.32*cm;
   G4int entry;
   G4int left=0;
   G4int right=0;
@@ -133,8 +128,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     firedY =interactionPosPhot[0].y();
   }
 
-  G4double delX = (length_X/nx);
-  G4double delY = (length_Y/ny);
+  G4double delX = (length_X/Nx);
+  G4double delY = (length_Y/Ny);
   G4double p0X = -(length_X/2);
   G4double p0Y = -(length_Y/2);
   G4double predX =0;
@@ -149,16 +144,22 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     G4cout << "FIREDX - XPOS: " << firedX << G4endl;
   #endif
 
-  for(int x = 0; x<(nx); x++)
+  for(int x = 0; x<(Nx); x++)
   {
-    for(int y = 0; y<(ny); y++)
+    for(int y = 0; y<(Ny); y++)
     {
-      left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
+      /*left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
       right = (G4int) analysisManager->GetH2(5)->bin_entries((x),(y)); //detectors
       scintiPhot = (G4int) analysisManager->GetH2(17)->bin_entries((x),(y)); //scintillator
-      eventData[(0*nx*ny)+((ny-1-y)*nx)+x]=(left);
-      eventData[(1*nx*ny)+((ny-1-y)*nx)+x]=(scintiPhot);
-      eventData[(2*nx*ny)+((ny-1-y)*nx)+x]=(right);
+      */
+      //removing ROOT dependency here
+      left = B3aEventAction::leftCount[x][y];
+      right = B3aEventAction::rightCount[x][y]; //detectors
+      scintiPhot = B3aEventAction::stripCount[x][y]; //scintillator
+
+      eventData[(0*Nx*Ny)+((Ny-1-y)*Nx)+x]=(left);
+      eventData[(1*Nx*Ny)+((Ny-1-y)*Nx)+x]=(scintiPhot);
+      eventData[(2*Nx*Ny)+((Ny-1-y)*Nx)+x]=(right);
       entry = left + right; //detectors
       //G4cout << "ENTRY: " << entry << "X " << x << "Y " << y << G4endl;
       if ((entry > 0) && (nevents !=0)) //detectors
@@ -192,6 +193,9 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
   analysisManager->FillH1(23, leftT);//left and right aggregate histograms
   analysisManager->FillH1(24, rightT);
+  std::cout << "EVT LEFT TOTALS:" << leftT << std::endl;
+  std::cout << "EVT RIGHT TOTALS:" << rightT << std::endl;
+  std::cout << "EVT TOTAL uniques Detections:" << B3aEventAction::detPhotonIDList.size() << std::endl;
   //Predict POSITION (position resolution)
 
     G4double zpred = ((att_len/(16))*log(double(leftT)/double(rightT))  + (length_D/(2)));
@@ -306,8 +310,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   beamInteract << endl;
   beamInteract.close(); 
 
-
-  std::ofstream photonSiPM("photonSiPMData.txt", std::ios_base::app);
+  string psmFile = "photonSiPMData.txt";
+  std::ofstream photonSiPM(psmFile, std::ios_base::app);
   for(vector<double> pos : photonSiPMData)
   {
     for(int u =0; u<pos.size(); u++)
@@ -318,7 +322,28 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
   photonSiPM << endl;
   photonSiPM.close();
-
+  #ifdef  ReflectionTracking
+    string reflectfile = "photonReflectData.txt";
+    string reflectfile2 = "photonReflectCount.txt";
+    #ifdef DISABLEVK
+    reflectfile = "photonReflectData_DISABLE_VK.txt";
+    reflectfile2 = "photonReflectCount_DISABLE_VK.txt";
+    #endif
+    std::ofstream photonReflectC(reflectfile2, std::ios_base::app);
+    photonReflectC << photonIDList.size() << endl;
+    photonReflectC.close();
+    std::ofstream photonReflect(reflectfile, std::ios_base::app);
+    for(vector<double> pos : photonReflectData)
+    {
+      for(int u =0; u<pos.size(); u++)
+      {
+        photonReflect << pos[u] << " ";
+      }
+      photonReflect << "|";
+    }
+    photonReflect << endl;
+    photonReflect.close();
+  #endif
 
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();
@@ -334,8 +359,11 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   parentTrack.clear();
   vertexPosition.clear();
   photonIDList.clear();
+  detPhotonIDList.clear();
   particleIDnum = 0;
   photonSiPMData.clear();
+  photonReflectData.clear();
+  B3aEventAction::initializeCount();
   foo22.unlock();
   barL22.unlock();
 

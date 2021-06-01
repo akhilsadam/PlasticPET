@@ -30,6 +30,10 @@
 #ifndef B3aEventAction_h
 #define B3aEventAction_h 1
 
+#ifndef VERSION
+#include "Version.hh"
+#endif
+
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 #include <vector>
@@ -57,17 +61,57 @@ class B3aEventAction : public G4UserEventAction
     void AddEdep(G4double Edep)     {fTotalEnergyDeposit += Edep;};      
     G4double GetEnergyDeposit()     {return fTotalEnergyDeposit;};   
 
+    int leftCount[Nx][Ny]={}; //avoid using ROOT as an intermediary
+    int rightCount[Nx][Ny]={};
+    int stripCount[Nx][Ny]={};
+
+    void initializeCount()          
+    {
+      //reset to 0
+      memset(leftCount, 0, sizeof(leftCount)); 
+      memset(rightCount, 0, sizeof(rightCount)); 
+      memset(stripCount, 0, sizeof(stripCount)); 
+    };
+    void fillL(G4double x,G4double y)
+    {
+      int xi = int (((x/length_X) + 0.5)*Nx);
+      int yi = int (((y/length_Y) + 0.5)*Ny);
+      if(xi==Nx){xi=Nx-1;} //right edge !
+      if(yi==Ny){yi=Ny-1;} //right edge !
+      //cout << "xi,x/lx:"<< xi <<"|" << x/length_X << endl;
+      leftCount[xi][yi]=leftCount[xi][yi] + 1;
+    };
+    void fillR(G4double x,G4double y)
+    {
+      int xi = int (((x/length_X) + 0.5)*Nx);
+      int yi = int (((y/length_Y) + 0.5)*Ny);
+      if(xi==Nx){xi=Nx-1;} //right edge !
+      if(yi==Ny){yi=Ny-1;} //right edge !
+      rightCount[xi][yi]=rightCount[xi][yi] + 1;
+    };
+    void fillS(G4double x,G4double y,G4int val)
+    {
+      int xi = int (((x/length_X) + 0.5)*Nx);
+      int yi = int (((y/length_Y) + 0.5)*Ny);
+      if(xi==Nx){xi=Nx-1;} //right edge !
+      if(yi==Ny){yi=Ny-1;} //right edge !
+      stripCount[xi][yi]=stripCount[xi][yi] + val;
+    };
+
+
     vector<G4ThreeVector> interactionPosPhot;
     vector<G4ThreeVector> interactionPosCompt;
     vector<vector<double>> interactionPos;
     vector<vector<double>> interactionPosTrack;
-    map<G4int,G4int> parentTrack;
-    map<G4int,G4ThreeVector> vertexPosition;
-    vector<G4int> photonIDList;
+    map<G4int,G4int> parentTrack; // key: currentID, value: parentID
+    map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: vertexPosition
+    vector<G4int> photonIDList; // list of all currentIDs
+    vector<G4int> detPhotonIDList; // list of all currentIDs detected
     G4int particleIDnum;
     G4int gammaID;
     G4double threshold = 0.00001;
     vector<vector<double>> photonSiPMData; //(X,Y,Z,T,L)
+    vector<vector<double>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle)
   private:
     B3aRunAction*  fRunAction;
     B3PrimaryGeneratorAction* fpga;
