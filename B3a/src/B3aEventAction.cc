@@ -88,12 +88,16 @@ B3aEventAction::~B3aEventAction()
 
 void B3aEventAction::BeginOfEventAction(const G4Event* /*evt*/)
 { 
+  VolAbsorption = 0;
+  BoundAbsorption = 0;
+  Rayleigh = 0;
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
   std::lock(foo22,barL22);
+
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   G4int entry;
   G4int left=0;
@@ -113,10 +117,12 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   G4double firedX =0;
   G4double firedY =0;
 
+  const int interType = 3;
   const int xvl = 3;
   const int yvl = 16;
   const int zvl = 3;
   vector<double> eventData(zvl*yvl*xvl); //shape = {z,y,x}
+  vector<double> eventDataType(interType*2*yvl*xvl); //shape = {type,z,y,x}
   G4PrimaryVertex* pv = evt->GetPrimaryVertex(0);
   G4ThreeVector pdir = fpga->GetParticleGun()->GetParticleMomentumDirection();
   vector<double> beamData={pv->GetX0(),pv->GetY0(),pv->GetZ0(),pdir.x(),pdir.y(),pdir.z()}; //shape = {z,y,x}
@@ -265,6 +271,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   for(int i = 0; i<photonIDList.size();i++)
   {
     G4int photon = photonIDList[i];
+    G4int pid_original = photonIDList[i];
     G4int parent = photon;
     while(parent != gammaID)
     {
@@ -295,7 +302,41 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     int min_i = min_element(diffs.begin(), diffs.end())-diffs.begin();
     interactionPos[min_i][3] = interactionPos[min_i][3] + 1;
     diffs.clear();
+    //
+    // If photon in list of detected photons, detPhotonType[pid_original] = gammaProcessIDList[min_i];
+    //
+    for(int k = 0; k<detPhotonIDList.size();k++)
+    {
+        if(detPhotonIDList[k] == pid_original)
+        {
+          //cout << "This photon was detected!" << endl;
+          detPhotonType[pid_original] = gammaProcessIDList[min_i];
+          break;
+        }
+    }
   }
+
+  for(G4int pid_k : detPhotonIDList)
+  {
+    //for(int tp = 0; tp<interType; tp++)
+    //for(int i = 0; i<Nx;i++)
+    //for(int j = 0;j<Ny; j++)
+    G4ThreeVector vpos = detectedPosition[pid_k];
+    G4double x = vpos.x();
+    G4double y = vpos.y();
+    G4double z = vpos.z();
+
+    int xi = int (((x/length_X) + 0.5)*Nx);
+    int yi = int (((y/length_Y) + 0.5)*Ny);
+    int zi = 0;
+    if(xi==Nx){xi=Nx-1;} //right edge !
+    if(yi==Ny){yi=Ny-1;} //right edge !
+    if(z>Oz){zi = 1;}
+    int tp = detPhotonType[pid_k];
+    eventDataType[(tp*2*Nx*Ny)+(zi*Nx*Ny)+((Ny-1-yi)*Nx)+xi]+=1;
+  }
+  cnpy::npy_save("photonCountTypes.npy",&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
+
 
 
 
@@ -344,6 +385,39 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     photonReflect << endl;
     photonReflect.close();
   #endif
+    string volFile = "volProcess.txt";
+    std::ofstream volStream(volFile, std::ios_base::app);
+      volStream << VolAbsorption << " ";
+      volStream << BoundAbsorption << " ";
+      volStream << Rayleigh << " ";
+      volStream << endl;
+    volStream.close();
+  #ifdef ElectronPathLength
+    string electFile = "electronPath.txt";
+    std::ofstream electPathStream(electFile, std::ios_base::app);
+    for(int i=0; i<electronPath.size(); i++)
+    {
+      electPathStream << (electronPath[i]/mm) << " ";
+      G4ThreeVector electronDisplaceTV  = electronDisplace[i];
+      electPathStream << electronDisplaceTV.x() << " ";
+      electPathStream << electronDisplaceTV.y() << " ";
+      electPathStream << electronDisplaceTV.z() << " ";
+      electPathStream << "|";
+    }
+    electPathStream << endl;
+    electPathStream.close();
+  #endif
+
+  string elect = "electronProcess.txt";
+  std::ofstream electStream(elect, std::ios_base::app);
+  for(int i=0; i<electronProcess.size(); i++)
+  {
+    electStream << electronProcessName[i] << " ";
+    electStream << electronProcess[i]<< " ";
+    electStream << "|";
+  }
+  electStream << endl;
+  electStream.close();
 
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();
@@ -356,6 +430,9 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   interactionPos.clear();
   interactionPosPhot.clear();
   interactionPosCompt.clear();
+  gammaProcessIDList.clear();
+  detectedPosition.clear();
+  detPhotonType.clear();
   parentTrack.clear();
   vertexPosition.clear();
   photonIDList.clear();
@@ -363,7 +440,18 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   particleIDnum = 0;
   photonSiPMData.clear();
   photonReflectData.clear();
+  #ifdef ElectronPathLength
+    electronStartPosition.clear();
+    electronPath.clear();
+    electronDisplace.clear();
+  #endif
+
+  electronProcessName.clear();
+  electronProcess.clear();
+
+  //photonReflectProcess.clear();
   B3aEventAction::initializeCount();
+  fRunAction->CountEvent();
   foo22.unlock();
   barL22.unlock();
 

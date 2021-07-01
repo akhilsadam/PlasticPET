@@ -40,7 +40,7 @@
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 #include "G4TScoreNtupleWriter.hh"
-
+#include "G4GeometryTolerance.hh"
 #include "Randomize.hh"
 
 
@@ -94,7 +94,9 @@ int main(int argc,char** argv)
 
   // Set mandatory initialization classes
   //
-
+  // need object!
+  //G4double WorldExtent = 1000*mm;
+  //G4GeometryManager::GetInstance()->SetWorldMaximumExtent(WorldExtent);
   parser.Read("gdml.gdml",false);//"G4EMPHATIC_out.gdml"
 
   //B3DetectorConstruction* det = new B3DetectorConstruction;
@@ -170,7 +172,9 @@ int main(int argc,char** argv)
     // interactive mode
     UImanager->ApplyCommand("/control/execute init_vis.mac");
     #ifndef SSRefractionTest
-      UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
+      #ifndef VIEWPORT_ONLY
+       UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
+      #endif
     #else
       UImanager->ApplyCommand("/vis/viewer/zoom 1024");
       UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 90 0");

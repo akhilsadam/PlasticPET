@@ -32,7 +32,8 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compileCommands": "C:/Users/sadam/Desktop/GEANT4/UTKL/PlasticPET/src/B3a/build/compile_commands.json"
         }
     ],
     "version": 4

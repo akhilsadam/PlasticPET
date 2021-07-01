@@ -202,7 +202,7 @@
         //fCrystalSurface_MPT->AddProperty("TRANSMITTANCE", PhotonEnergy, crystalTransmission, n);
         opCrystalSurface->SetFinish(ground);
         opCrystalSurface->SetModel(unified);
-        opCrystalSurface->SetSigmaAlpha(sigma_alphaGround);
+        opCrystalSurface->SetSigmaAlpha(sigma_alphaPolished);//opCrystalSurface->SetSigmaAlpha(sigma_alphaGround);
         opCrystalSurface->SetMaterialPropertiesTable(fCrystalSurface_MPT);
         //ONLY set crystal skin surface if using Vikuiti/air coupled separator, to set sigmaalpha at crystal-air interface.
         //G4LogicalSkinSurface* crystalSurface = new G4LogicalSkinSurface("Crystal Surface", logicCryst, opCrystalSurface);

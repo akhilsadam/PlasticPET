@@ -55,7 +55,9 @@
 std::mutex foo21;
 std::mutex barL21;
 bool B3aRunAction::CrossSectionTrue = true;
-
+RunTools* B3aRunAction::RunTool = NULL;
+int RunTools::currentEventNumber = 0;
+int RunTools::totalEvents = 0;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 B3aRunAction::B3aRunAction(G4VUserDetectorConstruction* patient, B3PrimaryGeneratorAction* kin)
  : G4UserRunAction(),
@@ -113,8 +115,13 @@ void B3aRunAction::BeginOfRunAction(const G4Run* run)
 		barL21.unlock();
   #endif
 
-
-  nevents = (G4int) (run->GetNumberOfEventToBeProcessed());
+  
+  if (IsMaster())
+  {
+    RunTool = new RunTools(run);
+    nevents = (G4int) RunTool->GetTotalEvents();
+  }
+  //nevents = (G4int) RunTool->GetTotalEvents();
   G4cout << "### Run " << run->GetRunID() << " start." << G4endl;
   
   // reset accumulables to their initial values

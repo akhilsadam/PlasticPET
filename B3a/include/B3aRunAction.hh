@@ -35,6 +35,7 @@
 #include "G4UserRunAction.hh"
 #include "G4Accumulable.hh"
 #include "globals.hh"
+#include "RunTools.hh"
 
 class HistoManager;
 class G4VUserDetectorConstruction;
@@ -51,7 +52,7 @@ class B3aRunAction : public G4UserRunAction
     virtual void BeginOfRunAction(const G4Run*);
     virtual void   EndOfRunAction(const G4Run*);
 
-    void CountEvent()           { fGoodEvents += 1; };
+    void CountEvent()           { fGoodEvents += 1; RunTool->completedEvent(); };
     void SumDose(G4double dose) { fSumDose += dose; };  
 
     G4int nevents;
@@ -64,6 +65,7 @@ private:
     G4VUserDetectorConstruction* fpatient;
     B3PrimaryGeneratorAction* fPrimary;
     static bool CrossSectionTrue;
+    static RunTools* RunTool;
 
 };
 

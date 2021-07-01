@@ -20,6 +20,11 @@ const double Dz = length_D;
 const double Ox = -2.58*cm;
 const double Oy = 4.83*cm;
 const double Oz = Dz/2;
+const double VKT= 0.1*mm;
+const double sx = 25.4*mm;
+const double sy = 6.2*mm;
+const double px = sx + 2*VKT;
+const double py = sy + 2*VKT;
 const int Nx = 3;
 const int Ny = 16;
 const int Nz = 1;
@@ -31,13 +36,15 @@ const double  att_len = 400*cm;
     //#define VIEWPORT_ONLY //enable to see a 3d interactive viewport, disable for console run.
 
     //#define DISABLEVK //Disable Vikuiti.
+    //#define RoughEnds
     //#define SSSpecularReflectionTest // reflection test - needs SSReflectionTest
     //#define SSReflectionTest // reflection test - needs SingleStrip define and ScintillationDisable
     //#define SSRefractionTest // refraction test - needs SingleStrip define and ScintillationDisable (NOT ReflectionDisable)
     #define CrossSectionTest // prints default cross sections! MAKE SURE THIS IS ENABLED! unless using PVT MPT
     #define ZPredictorTest // plots graphs to find the Z-location of the gamma! Will vary Z-position of Gamma hit!
     #define YPredictorTest // plots graphs to find the (and X) Y-location of the gamma! Will vary Y-position of Gamma hit!
-    #define ReflectionTracking // saves data on photon reflections/absorptions
+    //#define ReflectionTracking // saves data on photon reflections/absorptions
+    #define ElectronPathLength // saves data on electron mean displacement and path length
     //#define ULTRAreflective // makes VK have reflectivity 1!
     //#define LEGEND
 // ....oooOO0OOooo........oooOO0OOooo...|MAT-TYPE\...oooOO0OOooo........oooOO0OOooo......

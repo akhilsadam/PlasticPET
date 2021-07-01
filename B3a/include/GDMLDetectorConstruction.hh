@@ -393,7 +393,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	#ifndef SSRefractionTest
 		#ifdef ULTRAreflective
-			G4double reflectivity_vk[n] = {1,1,1,1,1,1};
+			G4double reflectivity_vk[n] = {1,1,1,1,1,1};//{0.5,0.5,0.5,0.5,0.5,0.5};//
 		#else
 			G4double reflectivity_vk[n] = {.9150,.9334,.9452,.9566,.9652,.9698}; //using ESR_Clear. DRP:{0.9643,0.9680,0.9698,0.9743,0.9761,0.9798};
 		#endif
@@ -407,7 +407,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	//G4double reflectivity_ej[n] =  {.9150,.9334,.9452,.9566,.9652,.9698}; //USING VK for now!!
 	G4double reflectivity_ej[n] =  {1,1,1,1,1,1};
 	#else
-	G4double reflectivity_ej[n] =  {1,1,1,1,1,1};
+	G4double reflectivity_ej[n] =  {1,1,1,1,1,1};//{0.5,0.5,0.5,0.5,0.5,0.5};//
 	#endif
 	
 	G4double efficiency[n] = {1.0,1.0,1.0,1.0,1.0,1.0};
@@ -418,6 +418,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4MaterialPropertiesTable* detMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* surfVKMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* surfEJMPT = new G4MaterialPropertiesTable();
+	G4MaterialPropertiesTable* surfEJMPTR = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* tpbMPT = new G4MaterialPropertiesTable();
 	G4MaterialPropertiesTable* surfTPBMPT = new G4MaterialPropertiesTable();
 
@@ -472,21 +473,26 @@ class GDMLDetectorConstruction : public DetectorConstruction
 //----------------------------------------------------------------------SETSURF----------------------------------------------------////
 	surfVKMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_vk, n);
 	surfEJMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_ej, n); // WHAT is the EJ reflectivity?
+	surfEJMPTR->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_ej, n); 
 	surfTPBMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_tpb, n2); 
 	surfVKMPT->AddProperty("EFFICIENCY", PhotonEnergy, efficiency, n);
 	surfEJMPT->AddProperty("EFFICIENCY", PhotonEnergy, efficiency, n);
+	surfEJMPTR->AddProperty("EFFICIENCY", PhotonEnergy, efficiency, n);
 	surfTPBMPT->AddProperty("EFFICIENCY", PhotonEnergy, efficiency2, n2); //NO Quantum efficiency implementation yet!
 	surfVKMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_vk,n);
 	surfEJMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_ej,n);
+	surfEJMPTR->AddProperty("RINDEX", PhotonEnergy,refractive_index_ej,n);
 	surfTPBMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_tpb,n2);
 	
 	G4OpticalSurface* surfVK = new G4OpticalSurface("surfVK");
 	G4OpticalSurface* surfEJ = new G4OpticalSurface("surfEJ");
+	G4OpticalSurface* surfEJR = new G4OpticalSurface("surfEJR");
 	G4OpticalSurface* surfTPB = new G4OpticalSurface("surfTPB");
 
 	G4double sigma_alpha_polish_tpb = 0.01;
 	#ifndef ReflectionDisable
-	G4double sigma_alpha_ground = 0.209439; //12deg., ground
+	G4double sigma_alpha_ground = 0.0226893; //0.209439; //12deg., ground
+	G4double sigma_alpha_ground_EJ = 0.0226893; //12deg., ground
 	#ifndef SSSpecularReflectionTest
 		G4double sigma_alpha_polish = 0.0226893; //1.3 deg., polished 
 	#else
@@ -504,6 +510,9 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	surfEJMPT->AddProperty("SPECULARLOBECONSTANT",PhotonEnergy,specularlobe,n);
 	surfEJMPT->AddProperty("SPECULARSPIKECONSTANT",PhotonEnergy,specularspike,n);
 	surfEJMPT->AddProperty("BACKSCATTERCONSTANT",PhotonEnergy,backscatter,n);
+	surfEJMPTR->AddProperty("SPECULARLOBECONSTANT",PhotonEnergy,specularlobe,n);
+	surfEJMPTR->AddProperty("SPECULARSPIKECONSTANT",PhotonEnergy,specularspike,n);
+	surfEJMPTR->AddProperty("BACKSCATTERCONSTANT",PhotonEnergy,backscatter,n);
 	surfTPBMPT->AddProperty("SPECULARLOBECONSTANT",PhotonEnergy,specularlobe2,n2);
 	surfTPBMPT->AddProperty("SPECULARSPIKECONSTANT",PhotonEnergy,specularspike2,n2);
 	surfTPBMPT->AddProperty("BACKSCATTERCONSTANT",PhotonEnergy,backscatter2,n2);
@@ -517,6 +526,11 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	surfEJ->SetFinish(ground);
 	surfEJ->SetSigmaAlpha(sigma_alpha_polish);
 	surfEJ->SetMaterialPropertiesTable(surfEJMPT);
+	surfEJ->SetType(dielectric_dielectric);
+	surfEJR->SetModel(unified);
+	surfEJR->SetFinish(ground);
+	surfEJR->SetSigmaAlpha(sigma_alpha_ground_EJ);
+	surfEJR->SetMaterialPropertiesTable(surfEJMPTR);
 	surfTPB->SetType(dielectric_dielectric);
 	surfTPB->SetModel(unified);
 	surfTPB->SetFinish(ground);
@@ -533,6 +547,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 //----------------------------------------------------------------------Geometry---------------------------------------------------////
 
 	G4VisAttributes* red_col = new G4VisAttributes(G4Color(0.6,0.4,0.4,1));
+	G4VisAttributes* end_col = new G4VisAttributes(G4Color(0.9,0.4,0.4,1));
 	G4VisAttributes* blue_col = new G4VisAttributes(G4Color(0.4,0.4,0.6,1));
 	G4VisAttributes* det_col = new G4VisAttributes(G4Color(0.8,0.8,1.0,1));
 	G4VisAttributes* tpb_col = new G4VisAttributes(G4Color(0.9,0.0,0.0,1));
@@ -552,6 +567,36 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	#ifdef MultipleStripCell
 
+		#ifdef RoughEnds
+			G4double edX = sx; G4double edY = sy; G4double edZ = 0.0000001*cm;
+			G4Box* endcap = new G4Box("E_EJ208", edX/2, edY/2, edZ/2);	
+
+			vector<G4ThreeVector> stripPos;
+
+			for(int y = 0; y<(Ny); y++)
+			{
+				int numSiPM = (int) (y/4);
+				double VKOffset = (2*numSiPM)*VKT;
+				double yi = (9.66*cm) - ((y)*py + VKOffset);
+				for(int x = 0; x<(Nx); x++)
+				{
+					VKOffset = (2*x+2)*VKT;
+					double xi = (x+1)*px + VKOffset - (Dx);
+					stripPos.push_back(G4ThreeVector(xi,yi,-(edZ/2)));
+					stripPos.push_back(G4ThreeVector(xi,yi,(length_Z + (edZ/2))));
+				}
+			}
+
+			G4LogicalSkinSurface* EJsurfR;
+			for(G4ThreeVector posR : stripPos)
+			{
+				G4LogicalVolume* endLV = new G4LogicalVolume(endcap,EJ208,"E_EJ208");
+				endLV->SetVisAttributes (end_col);
+				new G4PVPlacement(0,posR,"end",endLV,World, false,0,fCheckOverlaps);       // checking overlaps 
+				EJsurfR = new G4LogicalSkinSurface("E_EJ208",endLV, surfEJR); 
+			}
+		#endif
+
 	G4LogicalVolume* EJvol;
 	G4VPhysicalVolume* EJvol_P;
 	G4LogicalSkinSurface* EJsurf;
@@ -565,6 +610,9 @@ class GDMLDetectorConstruction : public DetectorConstruction
         //sprintf(a,"%d", i);
         //strcat(a,")");
         EJvol = parser.GetVolume(a);
+		/// adding roughened end caps to help with detection.
+		
+		/// 
 	  	EJvol->SetMaterial(EJ208);
 	  	EJvol->SetVisAttributes (red_col);
 	  	EJsurf = new G4LogicalSkinSurface("surfEJ_L",EJvol, surfEJ); 
@@ -586,6 +634,10 @@ class GDMLDetectorConstruction : public DetectorConstruction
 			VKvol->SetMaterial(Vikuiti);
 			VKvol->SetVisAttributes (blue_col);
 			VKsurf = new G4LogicalSkinSurface("surfVK_L",VKvol, surfVK);
+		#endif
+		#ifdef DISABLEVK
+			VKvol->SetMaterial(Air);
+			VKvol->SetVisAttributes (invis_col);
 		#endif
     }
 

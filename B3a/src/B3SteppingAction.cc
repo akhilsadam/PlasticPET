@@ -58,6 +58,7 @@ std::mutex foo2;
 std::mutex barL2;
 G4int B3SteppingAction::id = 0;
 G4double lastEnergy=0;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 B3SteppingAction::B3SteppingAction(B3aEventAction* EvAct, G4VUserDetectorConstruction* patient)
@@ -106,6 +107,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
  	analysisManager->FillH1(0, yshifted, edep);//y,edep
  	analysisManager->FillH2(0, xshifted, yshifted, edep);
  	analysisManager->FillH3(0, xshifted, yshifted, zshifted, edep);
+	 
+	std::string prim = track->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
+	G4double Eprim = (track->GetTotalEnergy()/keV); 
 
 	if(track->GetParticleDefinition()->GetParticleName() == "opticalphoton")
 	{
@@ -168,6 +172,19 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		ptrG4Track->SetTrackID(fEventAction->particleIDnum);
 		fEventAction->particleIDnum = fEventAction->particleIDnum + 1;
 
+		#ifdef ElectronPathLength
+			if((pdVar.compare("e-")==0) && (prim.compare("gamma")==0))
+			{
+				fEventAction->electronStartPosition[fEventAction->particleIDnum] = P2;//(G4ThreeVector(x-Ox,y-Oy,z));
+			}
+		#endif
+
+		if(pdVar.compare("e-")==0)
+		{
+			fEventAction->electronProcessName.push_back(ptrG4Track->GetCreatorProcess()->GetProcessName()); // electron process name;
+    		fEventAction->electronProcess.push_back(ptrG4Track->GetTrackID()); // eventID, trackID
+		}
+
 		//G4cout << "-- Secondary: " << pdVar << " || Es: " << (pp->GetKineticEnergy()/MeV) << G4endl;
 		//-----------Histograms----------
 		if(pdVar.compare("opticalphoton")==0)
@@ -178,8 +195,8 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			G4int trackid = ptrG4Track->GetTrackID();
 			if(count(fEventAction->photonIDList.begin(),fEventAction->photonIDList.end(),trackid))
 			{
-				G4cout << "photonIDList ERROR" << G4endl;
-				//fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
+				//G4cout << "photonIDList ERROR" << G4endl;
+				fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
 			}
 			else
 			{
@@ -265,9 +282,6 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 	}
 
-
-	std::string prim = track->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
-	G4double Eprim = (track->GetTotalEnergy()/keV); 
 	if(prim.compare("gamma")==0)
 	{
 		fEventAction->gammaID = track->GetTrackID();
@@ -283,28 +297,32 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		if(size>0)
 		{
 			ps = postPoint->GetProcessDefinedStep();
-			if(ps)
+			if((ps) && (step->GetStepLength()>0))
 			{
 				G4String psNm = ps->GetProcessName();
 				
 				//G4cout<<(ps->GetProcessName())<<G4endl;
 				analysisManager->FillH2(14, (x-Ox),(y-Oy), 1);
 				fEventAction->interactionPos.push_back({x-Ox,y-Oy,z,0,postPoint->GetGlobalTime()/ns,edep});//postPoint->GetLocalTime()
+				G4int gammaProcessID = 2;
 				if(psNm.compare("phot")==0)
 				{
 					analysisManager->FillH2(15, (x-Ox),(y-Oy), 1);
 					fEventAction->interactionPosPhot.push_back(G4ThreeVector(x-Ox,y-Oy,z));
+					gammaProcessID = 1;
 				}
 				else if(psNm.compare("compt")==0)
 				{
 					//COMPTON
 					analysisManager->FillH2(16, (x-Ox),(y-Oy), 1);
 					fEventAction->interactionPosCompt.push_back(G4ThreeVector(x-Ox,y-Oy,z));
+					gammaProcessID = 0;
 				}
 				else
 				{
 					G4cout << psNm << " not accounted for" << G4endl;
 				}
+				fEventAction->gammaProcessIDList.push_back(gammaProcessID);
 
 			}
 		}
@@ -314,9 +332,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 	 //// if (condition) G4RunManager::GetRunManager()->rndmSaveThisEvent();  
 
 	//-----------Histograms----------
-	if((prim.compare("opticalphoton")==0))
+	else if((prim.compare("opticalphoton")==0))
 	{
-		int pid = track->GetTrackID();
+		G4int pid = track->GetTrackID();
 		G4String vol = prePoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
 
 		if ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0))
@@ -324,124 +342,209 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			track->SetTrackStatus(fStopAndKill);
 		}
 
-		if (prePoint->GetStepStatus() == fGeomBoundary)
+		const G4VProcess* pds = postPoint->GetProcessDefinedStep();
+		if (pds->GetProcessName() == "OpAbsorption") {
+			if (postPoint->GetStepStatus() != fGeomBoundary) 
+			{
+				fEventAction->VolAbsorption = fEventAction->VolAbsorption + 1;
+			}
+			else
+			{
+				fEventAction->BoundAbsorption = fEventAction->BoundAbsorption + 1;
+			}
+		} 
+		else if (pds->GetProcessName() == "OpRayleigh") 
 		{
-			#ifdef  ReflectionTracking
-				int rid = 2;
-				G4double angleI = 0.0;
-				G4double angleR = 0.0;
-				// Incident Angle:
-				G4ThreeVector photonDirection = prePoint->GetMomentum() / prePoint->GetMomentum().mag();
-				const G4VTouchable *touchable = prePoint->GetTouchable();
-				const G4RotationMatrix *rotation = touchable->GetRotation();
-				G4RotationMatrix rotation_inv = rotation->inverse();
-				G4ThreeVector translation = touchable->GetTranslation();
-				G4VSolid *sector = touchable->GetSolid();
-				G4ThreeVector posLocal = *rotation * (P1 - translation);
+			fEventAction->Rayleigh = fEventAction->Rayleigh + 1;
+		}
 
-				G4ThreeVector normal =  - sector->SurfaceNormal(posLocal);
-				if(sector->Inside(P1) == kOutside)
-				{
-					normal = - normal;
-				}
-				G4ThreeVector photonDirectionLocal = *rotation * photonDirection;
-				G4double val0 = normal.dot(photonDirectionLocal);
-				angleI = (val0/abs(val0))*acos(val0);
 
-				if(track->GetTrackStatus() == fAlive)
+		if ((postPoint->GetStepStatus() == fGeomBoundary) && (step->GetStepLength()>0))
+		{
+			int rid = 2;
+			int reflectProcess = 4000;
+			G4OpBoundaryProcessStatus theStatus = Undefined;
+			G4ProcessManager* OpManager = G4OpticalPhoton::OpticalPhoton()->GetProcessManager();
+			if (OpManager) 
+			{
+				//G4int MAXofPostStepLoops = OpManager->GetPostStepProcessVector()->entries();
+				//G4ProcessVector* fPostStepDoItVector = OpManager->GetPostStepProcessVector(typeDoIt);
+
+				G4int MAXofPostStepLoops = OpManager->GetPostStepProcessVector()->entries();
+				G4ProcessVector* fPostStepDoItVector = OpManager->GetPostStepProcessVector(typeDoIt);
+
+				//G4VProcess* fCurrentProcess = (*fPostStepDoItVector)[MAXofPostStepLoops-1]; //; last step
+				//G4OpBoundaryProcess* fOpProcess = dynamic_cast<G4OpBoundaryProcess*>(fCurrentProcess);
+				//reflectProcess = (int) fOpProcess->GetStatus();
+				for ( G4int i=0; i<MAXofPostStepLoops; i++) 
 				{
-				// if the photon has been reflected at a boundary:
-					rid = 1;
-					// Reflected/Refracted Angle
-					G4ThreeVector photonPostDirection = postPoint->GetMomentum() / postPoint->GetMomentum().mag();
-					const G4VTouchable *touchable2 = postPoint->GetTouchable();
-					const G4RotationMatrix *rotation2 = touchable2->GetRotation();
-					G4RotationMatrix rotation_inv2 = rotation2->inverse();
-					G4ThreeVector translation2 = touchable2->GetTranslation();
-					G4VSolid *sector2 = touchable2->GetSolid();
-					G4ThreeVector posLocal2 = *rotation2 * (P2 - translation2);
-					G4ThreeVector normal2 = normal;// - sector2->SurfaceNormal(posLocal2);
-					//if(sector->Inside(P2) != sector->Inside(P1))
-					//{
-					//	normal2 = - normal2;
-					//}
-					
-					G4ThreeVector photonDirectionLocal2 = *rotation * photonPostDirection;
-					G4double val = normal2.dot(photonDirectionLocal2);
-					angleR = (val/abs(val))*acos(val);
-				}
-				else if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
-				{
-					/* code */
-					rid = 0;
-					if ((std::count(fEventAction->detPhotonIDList.begin(), fEventAction->detPhotonIDList.end(), pid)<=0) && ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0)))
+					G4VProcess* fCurrentProcess = (*fPostStepDoItVector)[i];
+					G4OpBoundaryProcess* fOpProcess = dynamic_cast<G4OpBoundaryProcess*>(fCurrentProcess);
+					if (fOpProcess)
 					{
-						rid = 4;
-						G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-						fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
-						fEventAction->detPhotonIDList.push_back(pid);
-						if(vol.compare("detVOLL")==0)
+						int notInList = 2;
+						
+						/*if(fEventAction->detPhotonIDList.size()>2)
 						{
-							//analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
-							//analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
-							//analysisManager->FillH1(17,  lambdaP, 1);
-							fEventAction->fillL(x-Ox,y-Oy);
+							cout << pid <<" "<<fEventAction->detPhotonIDList[fEventAction->detPhotonIDList.size()-1]<< endl;
+						}*/
+						for(int i =fEventAction->detPhotonIDList.size()-1;i>=0;i--)
+						{
+							if(fEventAction->detPhotonIDList[i] == pid)
+							{
+								cout << "!!" << endl;
+								notInList =  -1;
+								break;
+							}
+						}
+						/*if(find(fEventAction->detPhotonIDList.begin(),fEventAction->detPhotonIDList.end(),pid)== fEventAction->detPhotonIDList.end())
+						{
+							notInList =  2;
 						}
 						else
 						{
-							//analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
-							//analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
-							//analysisManager->FillH1(18,  lambdaP, 1);	
-							fEventAction->fillR(x-Ox,y-Oy);
-						}		
+
+						}*/
+						#ifdef  ReflectionTracking
+							reflectProcess = (int) fOpProcess->GetStatus();
+							//theStatus = fOpProcess->GetStatus();
+							//if(theStatus == Absorption)
+							//G4cout << "------------------------// status: " << statusEnum[theStatus+1] << G4endl;
+							//break;
+
+							G4double angleI = 0.0;
+							G4double angleR = 0.0;
+							// Incident Angle:
+							G4ThreeVector photonDirection = prePoint->GetMomentum() / prePoint->GetMomentum().mag();
+							const G4VTouchable *touchable = prePoint->GetTouchable();
+							const G4RotationMatrix *rotation = touchable->GetRotation();
+							G4RotationMatrix rotation_inv = rotation->inverse();
+							G4ThreeVector translation = touchable->GetTranslation();
+							G4VSolid *sector = touchable->GetSolid();
+							G4ThreeVector posLocal = *rotation * (P1 - translation);
+
+							G4ThreeVector normal =  - sector->SurfaceNormal(posLocal);
+							if(sector->Inside(P1) == kOutside)
+							{
+								normal = - normal;
+							}
+							G4ThreeVector photonDirectionLocal = *rotation * photonDirection;
+							G4double val0 = normal.dot(photonDirectionLocal);
+							angleI = (val0/abs(val0))*acos(val0);
+
+							if(track->GetTrackStatus() == fAlive)
+							{
+							// if the photon has been reflected at a boundary:
+								rid = 1;
+								// Reflected/Refracted Angle
+								G4ThreeVector photonPostDirection = postPoint->GetMomentum() / postPoint->GetMomentum().mag();
+								const G4VTouchable *touchable2 = postPoint->GetTouchable();
+								const G4RotationMatrix *rotation2 = touchable2->GetRotation();
+								G4RotationMatrix rotation_inv2 = rotation2->inverse();
+								G4ThreeVector translation2 = touchable2->GetTranslation();
+								G4VSolid *sector2 = touchable2->GetSolid();
+								G4ThreeVector posLocal2 = *rotation2 * (P2 - translation2);
+								G4ThreeVector normal2 = normal;// - sector2->SurfaceNormal(posLocal2);
+								//if(sector->Inside(P2) != sector->Inside(P1))
+								//{
+								//	normal2 = - normal2;
+								//}
+								
+								G4ThreeVector photonDirectionLocal2 = *rotation * photonPostDirection;
+								G4double val = normal2.dot(photonDirectionLocal2);
+								angleR = (val/abs(val))*acos(val);
+							}
+							else if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
+							{
+								/* code */
+								rid = 0;
+								if ((notInList>1) && ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0)))
+								{
+									rid = 4;
+									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
+									fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
+									fEventAction->detPhotonIDList.push_back(pid);
+									fEventAction->detectedPosition[pid] = {x-Ox,y-Oy,z};
+									if(vol.compare("detVOLL")==0)
+									{
+										//analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH1(17,  lambdaP, 1);
+										fEventAction->fillL(x-Ox,y-Oy);
+									}
+									else
+									{
+										//analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH1(18,  lambdaP, 1);	
+										fEventAction->fillR(x-Ox,y-Oy);
+									}		
+								}
+							}
+							else if (track->GetTrackStatus() == fSuspend)
+							{
+								/* code */
+								rid = 2;
+							}
+							else if (track->GetTrackStatus() == fStopButAlive)
+							{
+								/* code */
+								rid = 2;
+							}
+							else if (track->GetTrackStatus() == fPostponeToNextEvent)
+							{
+								/* code */
+								rid = 2;
+							}
+							else
+							{
+								/* code */
+								rid = 2;
+							}
+							fEventAction->photonReflectData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,rid,pid,angleI,angleR,reflectProcess});
+							//fEventAction->photonReflectProcess.push_back(reflectProcess);
+						#else
+						
+							if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
+							{
+								if ((notInList>1) && ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0)))
+								{
+									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
+									fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
+									fEventAction->detPhotonIDList.push_back(pid);
+									fEventAction->detectedPosition[pid] = {x-Ox,y-Oy,z};
+									if(vol.compare("detVOLL")==0)
+									{
+										//analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH1(17,  lambdaP, 1);
+										fEventAction->fillL(x-Ox,y-Oy);
+									}
+									else
+									{
+										//analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH1(18,  lambdaP, 1);	
+										fEventAction->fillR(x-Ox,y-Oy);
+									}		
+								}	
+							}
+						#endif	
 					}
 				}
-				else if (track->GetTrackStatus() == fSuspend)
-				{
-					/* code */
-					rid = 2;
-				}
-				else if (track->GetTrackStatus() == fStopButAlive)
-				{
-					/* code */
-					rid = 2;
-				}
-				else if (track->GetTrackStatus() == fPostponeToNextEvent)
-				{
-					/* code */
-					rid = 2;
-				}
-				else
-				{
-					/* code */
-					rid = 2;
-				}
-				fEventAction->photonReflectData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,rid,pid,angleI,angleR});
-			#else
-			
-				if ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0))
-				{
-					//if (std::count(fEventAction->detPhotonIDList.begin(), fEventAction->detPhotonIDList.end(), pid)<=0)
-					//if (prePoint->GetStepStatus() == fGeomBoundary)
-					G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-					fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
-					//fEventAction->detPhotonIDList.push_back(pid);
-					if(vol.compare("detVOLL")==0)
-					{
-						analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
-						analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
-						analysisManager->FillH1(17,  lambdaP, 1);
-					}
-					else
-					{
-						analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
-						analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
-						analysisManager->FillH1(18,  lambdaP, 1);	
-					}		
-				}
-			#endif	
+			//G4cout << "NEW STEP" << "- ID : " << step->GetTrack()->GetTrackID() << G4endl;
+			}
 		}
 	}
+
+	#ifdef ElectronPathLength
+		else if((prim.compare("e-")==0) && ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries)))
+		{
+			G4ThreeVector startpos = fEventAction->electronStartPosition[track->GetTrackID()];
+			fEventAction->electronDisplace.push_back(P1 - startpos);
+			fEventAction->electronPath.push_back(track->GetTrackLength());
+		}
+	#endif
 
 	/*
 	// Retrieve the status of the photon (From Kyle and Chris's code)

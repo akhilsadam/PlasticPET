@@ -89,6 +89,21 @@ class B3aEventAction : public G4UserEventAction
       if(yi==Ny){yi=Ny-1;} //right edge !
       rightCount[xi][yi]=rightCount[xi][yi] + 1;
     };
+    void fillLRT(G4double x,G4double y,G4double z,G4double lrt)
+    {
+      int xi = int (((x/length_X) + 0.5)*Nx);
+      int yi = int (((y/length_Y) + 0.5)*Ny);
+      if(xi==Nx){xi=Nx-1;} //right edge !
+      if(yi==Ny){yi=Ny-1;} //right edge !
+      if(z<Oz)
+      {
+        //leftCount[xi][yi]=leftCount[xi][yi] + 1;
+      }
+      else
+      {
+        //rightCount[xi][yi]=rightCount[xi][yi] + 1;
+      }
+    };
     void fillS(G4double x,G4double y,G4int val)
     {
       int xi = int (((x/length_X) + 0.5)*Nx);
@@ -103,6 +118,9 @@ class B3aEventAction : public G4UserEventAction
     vector<G4ThreeVector> interactionPosCompt;
     vector<vector<double>> interactionPos;
     vector<vector<double>> interactionPosTrack;
+    vector<int> gammaProcessIDList; // compton,photo, or other (0,1,2)
+    map<G4int,G4ThreeVector> detectedPosition; // pid->ThreeVector Position.
+    map<G4int,G4int> detPhotonType; // photon pid->gamma interaction type.
     map<G4int,G4int> parentTrack; // key: currentID, value: parentID
     map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: vertexPosition
     vector<G4int> photonIDList; // list of all currentIDs
@@ -111,7 +129,18 @@ class B3aEventAction : public G4UserEventAction
     G4int gammaID;
     G4double threshold = 0.00001;
     vector<vector<double>> photonSiPMData; //(X,Y,Z,T,L)
-    vector<vector<double>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle)
+    vector<vector<double>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle, processName)
+    map<G4int,G4ThreeVector> electronStartPosition; //(electron id, starting position)
+    vector<double> electronPath; // (double pathlength)
+    vector<G4ThreeVector> electronDisplace; // (x,y,z displacement)
+    //vector<int> photonReflectProcess; // as above, but process name.
+    vector<string> electronProcessName; // electron process name;
+    vector<int> electronProcess; // trackID
+
+    G4int VolAbsorption;
+    G4int BoundAbsorption;
+    G4int Rayleigh;
+
   private:
     B3aRunAction*  fRunAction;
     B3PrimaryGeneratorAction* fpga;
