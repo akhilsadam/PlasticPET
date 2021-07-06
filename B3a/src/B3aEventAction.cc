@@ -223,9 +223,9 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   //data dump
   int evtId = evt->GetEventID();
   //cnpy::npz_save("posRes.npz","data",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
-  cnpy::npy_save("photonCounts.npy",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
-  cnpy::npy_save("beamData.npy",&beamData[0],{1,2,3},"a"); //event location and momentum direction
-  std::ofstream beamInteract("beamInteract.txt", std::ios_base::app);
+  cnpy::npy_save("../../data/photonCounts.npy",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+  cnpy::npy_save("../../data/beamData.npy",&beamData[0],{1,2,3},"a"); //event location and momentum direction
+  std::ofstream beamInteract("../../data/beamInteract.txt", std::ios_base::app);
   for(int i = 0; i<3;i++)
   {
     for(G4ThreeVector pos : interactionPosPhot)
@@ -335,7 +335,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     int tp = detPhotonType[pid_k];
     eventDataType[(tp*2*Nx*Ny)+(zi*Nx*Ny)+((Ny-1-yi)*Nx)+xi]+=1;
   }
-  cnpy::npy_save("photonCountTypes.npy",&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
+  cnpy::npy_save("../../data/photonCountTypes.npy",&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
 
 
 
@@ -351,7 +351,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   beamInteract << endl;
   beamInteract.close(); 
 
-  string psmFile = "photonSiPMData.txt";
+  string psmFile = "../../data/photonSiPMData.txt";
   std::ofstream photonSiPM(psmFile, std::ios_base::app);
   for(vector<double> pos : photonSiPMData)
   {
@@ -364,11 +364,11 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   photonSiPM << endl;
   photonSiPM.close();
   #ifdef  ReflectionTracking
-    string reflectfile = "photonReflectData.txt";
-    string reflectfile2 = "photonReflectCount.txt";
+    string reflectfile = "../../data/photonReflectData.txt";
+    string reflectfile2 = "../../data/photonReflectCount.txt";
     #ifdef DISABLEVK
-    reflectfile = "photonReflectData_DISABLE_VK.txt";
-    reflectfile2 = "photonReflectCount_DISABLE_VK.txt";
+    reflectfile = "../../data/photonReflectData_DISABLE_VK.txt";
+    reflectfile2 = "../../data/photonReflectCount_DISABLE_VK.txt";
     #endif
     std::ofstream photonReflectC(reflectfile2, std::ios_base::app);
     photonReflectC << photonIDList.size() << endl;
@@ -385,7 +385,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     photonReflect << endl;
     photonReflect.close();
   #endif
-    string volFile = "volProcess.txt";
+    string volFile = "../../data/volProcess.txt";
     std::ofstream volStream(volFile, std::ios_base::app);
       volStream << VolAbsorption << " ";
       volStream << BoundAbsorption << " ";
@@ -393,7 +393,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       volStream << endl;
     volStream.close();
   #ifdef ElectronPathLength
-    string electFile = "electronPath.txt";
+    string electFile = "../../data/electronPath.txt";
     std::ofstream electPathStream(electFile, std::ios_base::app);
     for(int i=0; i<electronPath.size(); i++)
     {
@@ -408,7 +408,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     electPathStream.close();
   #endif
 
-  string elect = "electronProcess.txt";
+  string elect = "../../data/electronProcess.txt";
   std::ofstream electStream(elect, std::ios_base::app);
   for(int i=0; i<electronProcess.size(); i++)
   {

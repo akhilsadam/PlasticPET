@@ -491,7 +491,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	G4double sigma_alpha_polish_tpb = 0.01;
 	#ifndef ReflectionDisable
-	G4double sigma_alpha_ground = 0.0226893; //0.209439; //12deg., ground
+	G4double sigma_alpha_ground = 0.0226893; //0.209439; //12deg., ground //..  vk
 	G4double sigma_alpha_ground_EJ = 0.0226893; //12deg., ground
 	#ifndef SSSpecularReflectionTest
 		G4double sigma_alpha_polish = 0.0226893; //1.3 deg., polished 

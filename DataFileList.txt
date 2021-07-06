@@ -1,4 +1,8 @@
 beamData.npy
 beamInteract.txt
 photonCounts.npy
+photonCountTypes.npy
 photonSiPMData.txt
+electronPath.txt
+electronProcess.txt
+volProcess.txt
