@@ -1,6 +1,8 @@
-#include "G4PhysicalConstants.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4GlobalConfig.hh"
+#include <G4PhysicalConstants.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4GlobalConfig.hh>
+#include <string>
+using namespace std;
 
 #ifndef VERSION
 #define VERSION
@@ -29,6 +31,15 @@ const int Nx = 3;
 const int Ny = 16;
 const int Nz = 1;
 const double  att_len = 400*cm;
+#ifndef OUTPATH
+    #define OUTPATH
+    const std::string outpath = "../../data/current/";
+#endif
+
+#ifdef TACC_VERSIONS
+    #define G4TACC
+#endif
+
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
 
