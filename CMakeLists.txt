@@ -6,10 +6,10 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
 add_subdirectory(B3a)
 add_subdirectory(B3b)
-IF(${TACC} MATCHES "TRUE")
+IF(${hostname} MATCHES "utexas.edu")
 	# TACC specific
 	target_compile_definitions(B3 PUBLIC TACC)
-ENDIF(${TACC} MATCHES "TRUE")
+ENDIF(${hostname} MATCHES "utexas.edu")
 add_custom_target(B3 DEPENDS exampleB3a exampleB3b)
 
 
