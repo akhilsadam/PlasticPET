@@ -8,7 +8,7 @@ add_subdirectory(B3a)
 add_subdirectory(B3b)
 IF(${hostname} MATCHES "utexas.edu")
 	# TACC specific
-	target_compile_definitions(B3 PUBLIC TACC)
+	set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<TACC>)
 ENDIF(${hostname} MATCHES "utexas.edu")
 add_custom_target(B3 DEPENDS exampleB3a exampleB3b)
 
