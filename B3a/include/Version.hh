@@ -38,6 +38,9 @@ const double  att_len = 400*cm;
 
 #ifdef TACC_VERSIONS
     #define G4TACC
+    cout <<endl;
+    cout << "TACC VERSION IS NOW BEING USED!" <<endl;
+    cout <<endl;
 #endif
 
 
