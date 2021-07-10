@@ -6,7 +6,10 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
 add_subdirectory(B3a)
 add_subdirectory(B3b)
-add_compile_definitions($TACC)
+IF(${TACC} MATCHES "TRUE")
+	# TACC specific
+	target_compile_definitions(B3 PUBLIC TACC)
+ENDIF(${TACC} MATCHES "TRUE")
 add_custom_target(B3 DEPENDS exampleB3a exampleB3b)
 
 

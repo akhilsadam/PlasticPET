@@ -36,7 +36,7 @@ const double  att_len = 400*cm;
     const std::string outpath = "../../data/current/";
 #endif
 
-#ifdef TACC_VERSIONS
+#ifdef TACC
     #define G4TACC
     cout << "--------------------------------------------------------***********************************____________________" <<endl;
     cout << "TACC VERSION IS NOW BEING USED!" <<endl;
