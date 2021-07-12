@@ -11,6 +11,7 @@ add_custom_target(B3 DEPENDS exampleB3a exampleB3b)
 set( target_name B3 )
 set(CMAKE_CXX_FLAGS "-g -O0")
 
+message([STATUS] "Now checking for TACC Build ...")
 
 IF(${hostname} MATCHES "utexas.edu")
 	# TACC specific
