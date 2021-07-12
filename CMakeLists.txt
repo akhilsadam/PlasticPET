@@ -16,6 +16,6 @@ message([STATUS] "Now checking for TACC Build ...")
 if(DEFINED ENV{TACC})
 	# TACC specific
 	message([STATUS] "ON TACC")
-	target_compile_definitions( ${target_name} TACC=TRUE)
-	set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<TACC>)
+	target_compile_definitions(B3 TACC=TRUE)
+	# set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<TACC>)
 endif()
