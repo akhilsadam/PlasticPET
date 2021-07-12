@@ -18,4 +18,4 @@ if(DEFINED ENV{TACC})
 	message([STATUS] "ON TACC")
 	target_compile_definitions( ${target_name} TACC=TRUE)
 	set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<TACC>)
-endif
+endif()
