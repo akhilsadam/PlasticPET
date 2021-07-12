@@ -13,9 +13,9 @@ set(CMAKE_CXX_FLAGS "-g -O0")
 
 message([STATUS] "Now checking for TACC Build ...")
 
-IF($hostname MATCHES "utexas.edu")
+IF(${sharedir} MATCHES "utklshare")
 	# TACC specific
 	message([STATUS] "ON TACC")
-	target_compile_definitions( $target_name TACC=TRUE)
+	target_compile_definitions( ${target_name} TACC=TRUE)
 	set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<TACC>)
-ENDIF($hostname MATCHES "utexas.edu")
+ENDIF(${sharedir} MATCHES "utklshare")
