@@ -90,7 +90,7 @@ int main(int argc,char** argv)
   #ifndef TACC_CORES
     runManager->SetNumberOfThreads(6);
   #else
-    runManager->SetNumberOfThreads(40);
+    runManager->SetNumberOfThreads(16);
   #endif
 #else
   G4RunManager* runManager = new G4RunManager;
@@ -116,19 +116,35 @@ int main(int argc,char** argv)
   G4VModularPhysicsList* physicsList = new FTFP_BERT;
   physicsList->ReplacePhysics(new G4EmStandardPhysics_option4());
   G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
-  #ifdef ScintillationDisable
-  opticalPhysics->SetScintillationYieldFactor(0.);
-  #else
-  opticalPhysics->SetScintillationYieldFactor(1.0);
-  #endif
-  opticalPhysics->SetScintillationExcitationRatio(0.);
+  #ifndef G4TACC
+    #ifdef ScintillationDisable
+    opticalPhysics->SetScintillationYieldFactor(0.);
+    #else
+    opticalPhysics->SetScintillationYieldFactor(1.0);
+    #endif
+    opticalPhysics->SetScintillationExcitationRatio(0.);
 
-  opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
-  opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
-  opticalPhysics->SetScintillationByParticleType(false);
-  
-  opticalPhysics->SetMaxNumPhotonsPerStep(100);
-  opticalPhysics->SetMaxBetaChangePerStep(10.0);
+    opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
+    opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
+    opticalPhysics->SetScintillationByParticleType(false);
+    
+    opticalPhysics->SetMaxNumPhotonsPerStep(100);
+    opticalPhysics->SetMaxBetaChangePerStep(10.0);
+  #else
+    #ifdef ScintillationDisable
+    opticalPhysics->SetScintYieldFactor(0.);
+    #else
+    opticalPhysics->SetScintYieldFactor(1.0);
+    #endif
+    opticalPhysics->SetScintExcitationRatio(0.);
+
+    opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
+    opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
+    opticalPhysics->SetScintiByParticleType(false);
+    
+    opticalPhysics->SetMaxNumPhotonsPerStep(100);
+    opticalPhysics->SetMaxBetaChangePerStep(10.0);
+  #endif
 
   #ifdef LEGEND
     opticalPhysics->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
