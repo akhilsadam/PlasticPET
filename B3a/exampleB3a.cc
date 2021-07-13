@@ -146,7 +146,7 @@ int main(int argc,char** argv)
 
     optical->SetCerenkovTrackSecondariesFirst(true);
     optical->SetScintTrackSecondariesFirst(true);
-    optical->SetScintyParticleType(false);
+    optical->SetScintByParticleType(false);
     
     optical->SetCerenkovMaxPhotonsPerStep(100);
     optical->SetCerenkovMaxBetaChange(10.0);
