@@ -136,7 +136,7 @@ int main(int argc,char** argv)
     opticalPhysics->SetMaxNumPhotonsPerStep(100);
     opticalPhysics->SetMaxBetaChangePerStep(10.0);
   #else
-    G4OpticalParameters* optical = new G4OpticalParameters();
+    G4OpticalParameters* optical = G4OpticalParameters::Instance();
     #ifdef ScintillationDisable
     optical->SetScintYieldFactor(0.);
     #else
