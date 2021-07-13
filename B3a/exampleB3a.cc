@@ -132,15 +132,15 @@ int main(int argc,char** argv)
     opticalPhysics->SetMaxBetaChangePerStep(10.0);
   #else
     #ifdef ScintillationDisable
-    opticalPhysics->SetScintYieldFactor(0.);
+    opticalPhysics->SetScintillationYieldFactor(0.);
     #else
-    opticalPhysics->SetScintYieldFactor(1.0);
+    opticalPhysics->SetScintillationYieldFactor(1.0);
     #endif
-    opticalPhysics->SetScintExcitationRatio(0.);
+    opticalPhysics->SetScintillationExcitationRatio(0.);
 
     opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
     opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
-    opticalPhysics->SetScintiByParticleType(false);
+    opticalPhysics->SetScintillationByParticleType(false);
     
     opticalPhysics->SetMaxNumPhotonsPerStep(100);
     opticalPhysics->SetMaxBetaChangePerStep(10.0);
