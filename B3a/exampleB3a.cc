@@ -95,7 +95,7 @@ int main(int argc,char** argv)
   #ifndef TACC_CORES
     runManager->SetNumberOfThreads(6);
   #else
-    runManager->SetNumberOfThreads(16);
+    runManager->SetNumberOfThreads(1);
   #endif
 #else
   G4RunManager* runManager = new G4RunManager;
