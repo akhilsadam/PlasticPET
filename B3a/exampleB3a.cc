@@ -55,6 +55,8 @@
 #include "FTFP_BERT.hh"
 #include "G4OpticalPhysics.hh"
 #include "G4EmStandardPhysics_option4.hh"
+
+#include "G4Threading.hh"
 //#include "G4OpWLS.hh"
 
 
