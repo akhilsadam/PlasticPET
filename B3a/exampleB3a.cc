@@ -58,6 +58,9 @@
 
 #include "G4Threading.hh"
 //#include "G4OpWLS.hh"
+#ifdef G4TACC
+  #include "G4OpticalParameters.hh"
+#endif
 
 
 #include "G4GDMLParser.hh"
@@ -133,23 +136,28 @@ int main(int argc,char** argv)
     opticalPhysics->SetMaxNumPhotonsPerStep(100);
     opticalPhysics->SetMaxBetaChangePerStep(10.0);
   #else
+    G4OpticalParameters* optical = new G4OpticalParameters();
     #ifdef ScintillationDisable
-    opticalPhysics->SetScintillationYieldFactor(0.);
+    optical->SetScintYieldFactor(0.);
     #else
-    opticalPhysics->SetScintillationYieldFactor(1.0);
+    optical->SetScintYieldFactor(1.0);
     #endif
-    opticalPhysics->SetScintillationExcitationRatio(0.);
+    optical->SetScintExcitationRatio(0.);
 
-    opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
-    opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
-    opticalPhysics->SetScintillationByParticleType(false);
+    optical->SetCerenkovTrackSecondariesFirst(true);
+    optical->SetScintTrackSecondariesFirst(true);
+    optical->SetScintyParticleType(false);
     
-    opticalPhysics->SetMaxNumPhotonsPerStep(100);
-    opticalPhysics->SetMaxBetaChangePerStep(10.0);
+    optical->SetCerenkovMaxPhotonsPerStep(100);
+    optical->SetCerenkovMaxBetaChange(10.0);
   #endif
 
   #ifdef LEGEND
+    #ifndef G4TACC
     opticalPhysics->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
+    #else
+    optical->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
+    #endif
   #endif
 
 
