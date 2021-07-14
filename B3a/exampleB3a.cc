@@ -50,7 +50,7 @@
 #include "B3PhysicsList.hh"
 #include "B3aActionInitialization.hh"
 #include "B3Analysis.hh"
-#include "B3aHistoManager.hh"
+//#include "B3aHistoManager.hh"
 
 #include "FTFP_BERT.hh"
 #include "G4OpticalPhysics.hh"

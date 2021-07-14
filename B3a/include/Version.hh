@@ -39,7 +39,6 @@ const double  att_len = 400*cm;
 #ifdef TACC
     #define G4TACC
     //#define G4MULTITHREADED
-    #define G4MULTITHREADED=FALSE
     #define TACC_CORES
 #endif
 
