@@ -42,8 +42,20 @@ const double  att_len = 400*cm;
     #define TACC_CORES
 #endif
 
+//#define ULTRAreflective // makes VK have reflectivity as set by cmdline!
+#ifdef ULTRAreflective
+    const double ref_VK = ULTRAreflective;
+#endif
+#ifdef VK_SIGMAALPHA
+    const double sga_VK = VK_SIGMAALPHA;
+#endif
+#ifdef EJ_SIGMAALPHA
+    const double sga_EJ = EJ_SIGMAALPHA;
+#endif
+
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
+    #define G4MULTITHREADED
 
     //default - define CrossSectionTest
     //#define VIEWPORT_ONLY //enable to see a 3d interactive viewport, disable for console run.
@@ -58,7 +70,6 @@ const double  att_len = 400*cm;
     #define YPredictorTest // plots graphs to find the (and X) Y-location of the gamma! Will vary Y-position of Gamma hit!
     //#define ReflectionTracking // saves data on photon reflections/absorptions
     #define ElectronPathLength // saves data on electron mean displacement and path length
-    //#define ULTRAreflective // makes VK have reflectivity 1!
     //#define LEGEND
 // ....oooOO0OOooo........oooOO0OOooo...|MAT-TYPE\...oooOO0OOooo........oooOO0OOooo......
     //#define LYSOTest // swaps scintillator material to LYSO

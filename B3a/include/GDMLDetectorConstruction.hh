@@ -393,7 +393,10 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	#ifndef SSRefractionTest
 		#ifdef ULTRAreflective
-			G4double reflectivity_vk[n] = {1,1,1,1,1,1};//{0.5,0.5,0.5,0.5,0.5,0.5};//
+			G4double reflectivity_vk[n] = {ref_VK,ref_VK,ref_VK,ref_VK,ref_VK,ref_VK};//{0.5,0.5,0.5,0.5,0.5,0.5};//
+			cout << endl;
+			cout << "****USING REFLECTIVITY AS DEFINED BY COMMANDLINE****: ref_VK=" << ref_VK << endl;
+			cout << endl;
 		#else
 			G4double reflectivity_vk[n] = {.9150,.9334,.9452,.9566,.9652,.9698}; //using ESR_Clear. DRP:{0.9643,0.9680,0.9698,0.9743,0.9761,0.9798};
 		#endif
@@ -489,15 +492,30 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4OpticalSurface* surfEJR = new G4OpticalSurface("surfEJR");
 	G4OpticalSurface* surfTPB = new G4OpticalSurface("surfTPB");
 
-	G4double sigma_alpha_polish_tpb = 0.01;
+	G4double sigma_alpha_tpb = 0.01;
 	#ifndef ReflectionDisable
-	G4double sigma_alpha_ground = 0.0226893; //0.209439; //12deg., ground //..  vk
-	G4double sigma_alpha_ground_EJ = 0.0226893; //12deg., ground
+	G4double sigma_alpha_VK = 0.0226893; //0.209439; //12deg., ground //..  vk
+	G4double sigma_alpha_endcap_EJ = 0.0226893; //12deg., ground
 	#ifndef SSSpecularReflectionTest
-		G4double sigma_alpha_polish = 0.0226893; //1.3 deg., polished 
+		G4double sigma_alpha_EJ = 0.0226893; //1.3 deg., polished 
 	#else
-		G4double sigma_alpha_polish = 0.0;
+		G4double sigma_alpha_EJ = 0.0;
 	#endif
+
+	#ifdef VK_SIGMAALPHA
+		sigma_alpha_VK = sga_VK;
+		cout << endl;
+		cout << "****USING VK SIGMAALPHA AS DEFINED BY COMMANDLINE****: sga_VK=" << sigma_alpha_VK << endl;
+		cout << endl;
+	#endif
+
+	#ifdef EJ_SIGMAALPHA
+		sigma_alpha_EJ = sga_EJ;
+		cout << endl;
+		cout << "****USING EJ SIGMAALPHA AS DEFINED BY COMMANDLINE****: sga_EJ=" << sigma_alpha_EJ << endl;
+		cout << endl;
+	#endif
+
 	G4double specularlobe[n] = {1.0,1.0,1.0,1.0,1.0,1.0}; //all specular lobe (microfacet reflections) // test with specular spike (perfectly smooth surface!)
 	G4double specularspike[n] = {0.0,0.0,0.0,0.0,0.0,0.0};
 	G4double backscatter[n] = {0.0,0.0,0.0,0.0,0.0,0.0};
@@ -519,22 +537,22 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	surfVK->SetType(dielectric_metal);
 	surfVK->SetModel(unified);
 	surfVK->SetFinish(ground);
-	surfVK->SetSigmaAlpha(sigma_alpha_ground);
+	surfVK->SetSigmaAlpha(sigma_alpha_VK);
 	surfVK->SetMaterialPropertiesTable(surfVKMPT);
 	surfEJ->SetType(dielectric_dielectric);
 	surfEJ->SetModel(unified);
 	surfEJ->SetFinish(ground);
-	surfEJ->SetSigmaAlpha(sigma_alpha_polish);
+	surfEJ->SetSigmaAlpha(sigma_alpha_EJ);
 	surfEJ->SetMaterialPropertiesTable(surfEJMPT);
 	surfEJ->SetType(dielectric_dielectric);
 	surfEJR->SetModel(unified);
 	surfEJR->SetFinish(ground);
-	surfEJR->SetSigmaAlpha(sigma_alpha_ground_EJ);
+	surfEJR->SetSigmaAlpha(sigma_alpha_endcap_EJ);
 	surfEJR->SetMaterialPropertiesTable(surfEJMPTR);
 	surfTPB->SetType(dielectric_dielectric);
 	surfTPB->SetModel(unified);
 	surfTPB->SetFinish(ground);
-	surfTPB->SetSigmaAlpha(sigma_alpha_polish_tpb);
+	surfTPB->SetSigmaAlpha(sigma_alpha_tpb);
 	surfTPB->SetMaterialPropertiesTable(surfTPBMPT);
 	#endif
 

@@ -93,7 +93,7 @@ int main(int argc,char** argv)
 #ifdef G4MULTITHREADED
   G4MTRunManager* runManager = new G4MTRunManager;
   #ifndef TACC_CORES
-    runManager->SetNumberOfThreads(6);
+    runManager->SetNumberOfThreads(7);
   #else
     runManager->SetNumberOfThreads(1);
   #endif
