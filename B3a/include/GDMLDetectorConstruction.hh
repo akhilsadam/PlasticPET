@@ -677,6 +677,11 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	new G4PVPlacement(0,pos2,"det",logicDetL,World, false,0,fCheckOverlaps); 
 	//new G4PVPlacement(0,pos3,"ydet",logicDetY,World, false,0,fCheckOverlaps); 
 
+
+	#ifdef CompleteScanner
+		cout << "\nUSING COMPLETE SCANNER GEOMETRY\n"<<endl;
+	#endif
+
 	#endif
 	#ifdef SingleStrip
 

@@ -75,6 +75,8 @@ const double  att_len = 400*cm;
     //#define LYSOTest // swaps scintillator material to LYSO
     //#define PVTTest // swaps scintillator material to PVT
 // ....oooOO0OOooo........oooOO0OOooo...|GEOMETRY\...oooOO0OOooo........oooOO0OOooo......
+    #define CompleteScanner
+
     #define MultipleStripCell // all 3x16 strips - default
 
     //#define SingleStrip // one EJ208 strip for debugging
