@@ -292,6 +292,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 			G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
 			if(V!=NULL)
 			{			
+				cout << V->GetTranslation() << endl;
 				positions.push_back(V->GetTranslation());
 			}
 			else
