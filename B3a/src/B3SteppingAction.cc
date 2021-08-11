@@ -360,7 +360,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				}
 				else
 				{
-					G4cout << psNm << " not accounted for" << G4endl;
+					#ifndef TACC
+						G4cout << psNm << " not accounted for" << G4endl;
+					#endif
 				}
 				fEventAction->gammaProcessIDList.push_back(gammaProcessID);
 
