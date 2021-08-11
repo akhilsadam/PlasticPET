@@ -75,8 +75,33 @@ B3SteppingAction::~B3SteppingAction()
 void B3SteppingAction::UserSteppingAction(const G4Step* step)
 {
  	std::lock(foo2,barL2);
- 	G4double edep = (step->GetTotalEnergyDeposit())/keV;
+
+	G4double edep = (step->GetTotalEnergyDeposit())/keV;
 	G4Track* track = step->GetTrack();
+	std::string prim = track->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
+
+	if(prim.compare("gamma")==0)
+	{
+		bool newGamma = true;
+		vector<G4int> gammaIDs = fEventAction->gammaID;
+		G4int currentTrackID = track->GetTrackID();
+		for(int gi = 0; gi<gammaIDs.size();gi++)
+		{
+			if (gammaIDs[gi] == currentTrackID)
+			{
+				newGamma = false;
+				break;
+			}
+		}
+		if (newGamma)
+		{
+			currentTrackID = fEventAction->gammaIDCounter;
+			track->SetTrackID(fEventAction->gammaIDCounter);
+			 fEventAction->gammaIDCounter =  fEventAction->gammaIDCounter + 1;
+			fEventAction->gammaID.push_back(currentTrackID);
+		}
+	}
+
 	if(fEventAction->parentTrack.find(track->GetTrackID())==fEventAction->parentTrack.end())
 	{
 		fEventAction->parentTrack[track->GetTrackID()] = track->GetParentID();
@@ -104,11 +129,23 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
  	G4double yshifted = yr + 0.5*(((DetectorConstruction*) fpatient)->GetWorldSizeXY());
  	G4double zshifted = zr + 0.5*(((DetectorConstruction*) fpatient)->GetWorldSizeZ());
 
+
+	// Get Array # (G4 copy)
+	G4VPhysicalVolume* currentVolume = prePoint->GetTouchableHandle()->GetVolume();
+	G4int copyNumber = currentVolume->GetCopyNo();
+	G4int detA = 0;
+	if(copyNumber!=0)
+	{
+		detA = (copyNumber-copyNumberOffset)/(NAssemblyElements+1);
+	}
+	//cout << currentVolume->GetName() << endl;
+	//cout << detA <<endl;
+	G4ThreeVector xyzS = fEventAction->GlobalToArrayXY(x,y,z,detA);
+
  	analysisManager->FillH1(0, yshifted, edep);//y,edep
  	analysisManager->FillH2(0, xshifted, yshifted, edep);
  	analysisManager->FillH3(0, xshifted, yshifted, zshifted, edep);
 	 
-	std::string prim = track->GetDynamicParticle()->GetParticleDefinition()->GetParticleName();
 	G4double Eprim = (track->GetTotalEnergy()/keV); 
 
 	if(track->GetParticleDefinition()->GetParticleName() == "opticalphoton")
@@ -118,7 +155,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			G4double x  = track->GetPosition().x();
        		G4double y  = track->GetPosition().y();
        		G4double z  = track->GetPosition().z();
-			analysisManager->FillH3(1,x-Ox,y-Oy,z-Oz,1);
+			analysisManager->FillH3(1,xyzS.x(),xyzS.y(),xyzS.z(),1);
 			if(prePoint->GetStepStatus() == fGeomBoundary)
 			{
 				analysisManager->FillH1(2,1);
@@ -175,7 +212,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		#ifdef ElectronPathLength
 			if((pdVar.compare("e-")==0) && (prim.compare("gamma")==0))
 			{
-				fEventAction->electronStartPosition[fEventAction->particleIDnum] = P2;//(G4ThreeVector(x-Ox,y-Oy,z));
+				fEventAction->electronStartPosition[fEventAction->particleIDnum] = P2;//(G4ThreeVector(xyzS.x(),xyzS.y(),xyzS.z()));
 			}
 		#endif
 
@@ -205,10 +242,10 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 
 			//G4cout << "Filled Photon Deposition" << G4endl;
-			analysisManager->FillH1(8, (x-Ox), 1);
-			analysisManager->FillH2(1, (x-Ox),(y-Oy), 1);
+			analysisManager->FillH1(8, (xyzS.x()), 1);
+			analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), 1);
 
-			fEventAction->fillS(x-Ox,y-Oy,1); // OBSOLETE(right): // analysisManager->FillH2(17, (x-Ox),(y-Oy), 1);
+			fEventAction->fillS(xyzS.x(),xyzS.y(),detA,1); // OBSOLETE(right): // analysisManager->FillH2(17, (xyzS.x()),(xyzS.y()), 1);
 
 			analysisManager->FillH1(9, 0.5, 1);
 			ps = postPoint->GetProcessDefinedStep();
@@ -218,33 +255,33 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				if(psN.compare("eIoni")==0)
 				{
 					//Electron Ionization (Photoelectric)
-					analysisManager->FillH2(7, (x-Ox),(y-Oy), 1);
+					analysisManager->FillH2(7, (xyzS.x()),(xyzS.y()), 1);
 					
 				}
 				else if(psN.compare("msc")==0)
 				{
 					//COMPTON
-					analysisManager->FillH2(8, (x-Ox),(y-Oy), 1);
+					analysisManager->FillH2(8, (xyzS.x()),(xyzS.y()), 1);
 					//analysisManager->FillH1(10, ((Dy/2) - (y-Oy)), 1);
 				}
 				else if(psN.compare("Cerenkov")==0)
 				{
 					//Cerenkov
-					analysisManager->FillH2(9, (x-Ox),(y-Oy), 1);
+					analysisManager->FillH2(9, (xyzS.x()),(xyzS.y()), 1);
 					//analysisManager->FillH1(11, ((Dy/2) - (y-Oy)), 1);
 				}
 				else if(psN.compare("eBrem")==0)
 				{
 					//Electron Braking radiation
-					analysisManager->FillH2(10, (x-Ox),(y-Oy), 1);
+					analysisManager->FillH2(10, (xyzS.x()),(xyzS.y()), 1);
 					//analysisManager->FillH1(12, ((Dy/2) - (y-Oy)), 1);
 				}
 				else if(psN.compare("Transportation")==0)
 				{
 					//motion - do nothing - un-double-count
-					analysisManager->FillH1(8, (x-Ox), -1);
-					analysisManager->FillH2(1, (x-Ox),(y-Oy), -1);
-					fEventAction->fillS(x-Ox,y-Oy,-1); // OBSOLETE(right): // analysisManager->FillH2(17, (x-Ox),(y-Oy), -1);
+					analysisManager->FillH1(8, (xyzS.x()), -1);
+					analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), -1);
+					fEventAction->fillS(xyzS.x(),xyzS.y(),detA,-1); // OBSOLETE(right): // analysisManager->FillH2(17, xyzS.x(),xyzS.y(), -1);
 				}
 				else
 				{
@@ -284,8 +321,11 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 	if(prim.compare("gamma")==0)
 	{
-		fEventAction->gammaID = track->GetTrackID();
+		G4int currentTrackID = track->GetTrackID();
+
+
 		/*if(Eprim <=0)
+
 		{
 			Eprim = 0;
 			G4cout<<"//\\prim <=0"<<G4endl;
@@ -302,20 +342,20 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				G4String psNm = ps->GetProcessName();
 				
 				//G4cout<<(ps->GetProcessName())<<G4endl;
-				analysisManager->FillH2(14, (x-Ox),(y-Oy), 1);
-				fEventAction->interactionPos.push_back({x-Ox,y-Oy,z,0,postPoint->GetGlobalTime()/ns,edep});//postPoint->GetLocalTime()
+				analysisManager->FillH2(14, (xyzS.x()),(xyzS.y()), 1);
+				fEventAction->interactionPos.push_back({x,y,z,0,postPoint->GetGlobalTime()/ns,track->GetTrackID()});//postPoint->GetLocalTime()
 				G4int gammaProcessID = 2;
 				if(psNm.compare("phot")==0)
 				{
-					analysisManager->FillH2(15, (x-Ox),(y-Oy), 1);
-					fEventAction->interactionPosPhot.push_back(G4ThreeVector(x-Ox,y-Oy,z));
+					analysisManager->FillH2(15, xyzS.x(),xyzS.y(), 1);
+					fEventAction->interactionPosPhot.push_back(G4ThreeVector(x,y,z));
 					gammaProcessID = 1;
 				}
 				else if(psNm.compare("compt")==0)
 				{
 					//COMPTON
-					analysisManager->FillH2(16, (x-Ox),(y-Oy), 1);
-					fEventAction->interactionPosCompt.push_back(G4ThreeVector(x-Ox,y-Oy,z));
+					analysisManager->FillH2(16, xyzS.x(),xyzS.y(), 1);
+					fEventAction->interactionPosCompt.push_back(G4ThreeVector(x,y,z));
 					gammaProcessID = 0;
 				}
 				else
@@ -335,9 +375,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 	else if((prim.compare("opticalphoton")==0))
 	{
 		G4int pid = track->GetTrackID();
-		G4String vol = prePoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume()->GetName();
+		G4String vol = currentVolume->GetLogicalVolume()->GetName();
 
-		if ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0))
+		if ((vol.find(detectorLeftName) != std::string::npos) || (vol.find(detectorRightName) != std::string::npos))
 		{
 			track->SetTrackStatus(fStopAndKill);
 		}
@@ -458,26 +498,26 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 							{
 								/* code */
 								rid = 0;
-								if ((notInList>1) && ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0)))
+								if ((notInList>1) && ((vol.find(detectorLeftName) != std::string::npos) || (vol.find(detectorRightName) != std::string::npos)))
 								{
 									rid = 4;
 									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-									fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
+									fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS,z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
 									fEventAction->detPhotonIDList.push_back(pid);
-									fEventAction->detectedPosition[pid] = {x-Ox,y-Oy,z};
-									if(vol.compare("detVOLL")==0)
+									fEventAction->detectedPosition[pid] = {x,y,z};
+									if(vol.find(detectorRightName) == std::string::npos)
 									{
-										//analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
-										//analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(2, xyzS.x(),xyzS.y(), 1);
+										//analysisManager->FillH2(4, xyzS.x(),xyzS.y(), 1);
 										//analysisManager->FillH1(17,  lambdaP, 1);
-										fEventAction->fillL(x-Ox,y-Oy);
+										fEventAction->fillL(xyzS.x(),xyzS.y(),detA);
 									}
 									else
 									{
-										//analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
-										//analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(3, xyzS.x(),xyzS.y(), 1);
+										//analysisManager->FillH2(5, xyzS.x(),xyzS.y(), 1);
 										//analysisManager->FillH1(18,  lambdaP, 1);	
-										fEventAction->fillR(x-Ox,y-Oy);
+										fEventAction->fillR(xyzS.x(),xyzS.y(),detA);
 									}		
 								}
 							}
@@ -501,31 +541,32 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 								/* code */
 								rid = 2;
 							}
-							fEventAction->photonReflectData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,rid,pid,angleI,angleR,reflectProcess});
+							fEventAction->photonReflectData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,rid,pid,angleI,angleR,reflectProcess});
 							//fEventAction->photonReflectProcess.push_back(reflectProcess);
 						#else
 						
 							if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
 							{
-								if ((notInList>1) && ((vol.compare("detVOLR")==0) || (vol.compare("detVOLL")==0)))
+								if ((notInList>1) && ((vol.find(detectorLeftName) != std::string::npos) || (vol.find(detectorRightName) != std::string::npos)))
 								{
 									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-									fEventAction->photonSiPMData.push_back({x-Ox,y-Oy,z,prePoint->GetGlobalTime()/ns,lambdaP});
+									fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
 									fEventAction->detPhotonIDList.push_back(pid);
-									fEventAction->detectedPosition[pid] = {x-Ox,y-Oy,z};
-									if(vol.compare("detVOLL")==0)
+									fEventAction->detectedPosition[pid] = {x,y,z};
+									if(vol.find(detectorRightName) == std::string::npos)
 									{
-										//analysisManager->FillH2(2, (x-Ox), (y-Oy), 1);
-										//analysisManager->FillH2(4, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(2, xyzS.x(),xyzS.y(), 1);
+										//analysisManager->FillH2(4, xyzS.x(),xyzS.y(), 1);
 										//analysisManager->FillH1(17,  lambdaP, 1);
-										fEventAction->fillL(x-Ox,y-Oy);
+										fEventAction->fillL(xyzS.x(),xyzS.y(),detA);
+										//cout << vol << endl;
 									}
 									else
 									{
-										//analysisManager->FillH2(3, (x-Ox), (y-Oy), 1);
-										//analysisManager->FillH2(5, (x-Ox), (y-Oy), 1);
+										//analysisManager->FillH2(3, xyzS.x(),xyzS.y(), 1);
+										//analysisManager->FillH2(5, xyzS.x(),xyzS.y(), 1);
 										//analysisManager->FillH1(18,  lambdaP, 1);	
-										fEventAction->fillR(x-Ox,y-Oy);
+										fEventAction->fillR(xyzS.x(),xyzS.y(),detA);
 									}		
 								}	
 							}

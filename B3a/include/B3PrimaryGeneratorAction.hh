@@ -57,6 +57,7 @@ class B3PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 
   private:
     G4ParticleGun*  fParticleGun;
+    G4ParticleGun*  fParticleGun2;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

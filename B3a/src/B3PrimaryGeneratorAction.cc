@@ -40,6 +40,8 @@
 #include "Randomize.hh"
 #include "G4RandomDirection.hh"
 
+#include <ctime> 
+#include <cstdlib>
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
@@ -49,14 +51,25 @@ B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
     // default particle kinematic
 
   #ifdef MultipleStripCell
-  G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-  G4int n_particle = 1;
-  fParticleGun  = new G4ParticleGun(n_particle);
-  G4ParticleDefinition* particle = particleTable->FindParticle("gamma");//FindParticle("chargedgeantino");
-  fParticleGun->SetParticleDefinition(particle);
-  fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
-  fParticleGun->SetParticleEnergy(511*keV);  //SetParticleEnergy(1*eV); between 70-250 MeV   
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(-1,0,0));
+    G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+    G4int n_particle = 1;
+    fParticleGun  = new G4ParticleGun(n_particle);
+    G4ParticleDefinition* particle = particleTable->FindParticle("gamma");//FindParticle("chargedgeantino");
+    fParticleGun->SetParticleDefinition(particle);
+    fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
+    fParticleGun->SetParticleEnergy(511*keV);  
+    G4ThreeVector randDir = G4RandomDirection().unit();
+    cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
+    fParticleGun->SetParticleMomentumDirection(randDir);
+    #ifdef CompleteScanner
+      fParticleGun2  = new G4ParticleGun(n_particle);
+      fParticleGun2->SetParticleDefinition(particle);
+      fParticleGun2->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
+      fParticleGun2->SetParticleEnergy(511*keV); 
+      G4ThreeVector randDir2 = -randDir;
+      cout << "OTHER " << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
+      fParticleGun2->SetParticleMomentumDirection(randDir2);
+    #endif
   #endif
 }
 
@@ -88,13 +101,26 @@ void B3PrimaryGeneratorAction::RESETtest()
   fParticleGun->SetParticleDefinition(particle);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
   fParticleGun->SetParticleEnergy(511*keV);  //SetParticleEnergy(1*eV); between 70-250 MeV   
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(-1,0,0));
+  #ifndef RadialSource
+    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1,0,0));
+  #else
+    G4ThreeVector randDir = G4RandomDirection().unit();
+    cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
+    fParticleGun->SetParticleMomentumDirection(randDir);
+    //fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1,0.1,0));
+  #endif
   #endif
 }
 
 
 void B3PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
+
+  // since seeding seems not to work
+  G4long seed = anEvent->GetEventID()+time(0); //anEvent->GetEventID()+1092;
+  cout << "SEED: " << seed << endl;
+  G4Random::setTheSeed(seed);
+
  /*G4ParticleDefinition* particle = fParticleGun->GetParticleDefinition();
 if (particle == G4ChargedGeantino::ChargedGeantino()) {
     //fluorine 
@@ -123,18 +149,27 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
   //create vertex
   //
   #ifdef MultipleStripCell
-  G4double x0  = 30*cm;
+  G4double x0  = 0*cm;
     #ifndef ZPredictorTest
     G4double z0  = length_D/2;
     #else
-    G4double z0  = (G4UniformRand()*length_D);
+    G4double z0  = (G4UniformRand())*length_Z;
     #endif
     #ifndef YPredictorTest
-    G4double y0  = (4.83+(2.56/2))*cm;
+    G4double y0  = 0*cm;
     #else
-    G4double y0  = (4.83*cm)+(length_Y*(G4UniformRand()-0.5));
+    G4double y0  = (length_Y*(G4UniformRand()-0.5));
     #endif
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  G4ThreeVector randDir = G4RandomDirection().unit();
+  cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
+  fParticleGun->SetParticleMomentumDirection(randDir);
+    #ifdef CompleteScanner
+      G4ThreeVector randDir2 = -randDir;
+      cout << "OTHER " << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
+      fParticleGun2->SetParticleMomentumDirection(randDir2);
+      fParticleGun2->GeneratePrimaryVertex(anEvent);
+    #endif
   fParticleGun->GeneratePrimaryVertex(anEvent);
   #endif
 

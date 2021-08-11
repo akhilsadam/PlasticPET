@@ -126,6 +126,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   G4PrimaryVertex* pv = evt->GetPrimaryVertex(0);
   G4ThreeVector pdir = fpga->GetParticleGun()->GetParticleMomentumDirection();
   vector<double> beamData={pv->GetX0(),pv->GetY0(),pv->GetZ0(),pdir.x(),pdir.y(),pdir.z()}; //shape = {z,y,x}
+  
+  int evtId = evt->GetEventID();
 
   if(interactionPosPhot.size() > 0)
   {
@@ -150,47 +152,58 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     G4cout << "FIREDX - XPOS: " << firedX << G4endl;
   #endif
 
-  for(int x = 0; x<(Nx); x++)
+
+  for (int a = 0;a<(Na); a++)
   {
-    for(int y = 0; y<(Ny); y++)
+    for(int x = 0; x<(Nx); x++)
     {
-      /*left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
-      right = (G4int) analysisManager->GetH2(5)->bin_entries((x),(y)); //detectors
-      scintiPhot = (G4int) analysisManager->GetH2(17)->bin_entries((x),(y)); //scintillator
-      */
-      //removing ROOT dependency here
-      left = B3aEventAction::leftCount[x][y];
-      right = B3aEventAction::rightCount[x][y]; //detectors
-      scintiPhot = B3aEventAction::stripCount[x][y]; //scintillator
-
-      eventData[(0*Nx*Ny)+((Ny-1-y)*Nx)+x]=(left);
-      eventData[(1*Nx*Ny)+((Ny-1-y)*Nx)+x]=(scintiPhot);
-      eventData[(2*Nx*Ny)+((Ny-1-y)*Nx)+x]=(right);
-      entry = left + right; //detectors
-      //G4cout << "ENTRY: " << entry << "X " << x << "Y " << y << G4endl;
-      if ((entry > 0) && (nevents !=0)) //detectors
+      for(int y = 0; y<(Ny); y++)
       {
-        //G4cout << " Filling " << G4endl;
-        analysisManager->FillH2(6, (x),(y), (1.0) );
-      }
+        /*left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
+        right = (G4int) analysisManager->GetH2(5)->bin_entries((x),(y)); //detectors
+        scintiPhot = (G4int) analysisManager->GetH2(17)->bin_entries((x),(y)); //scintillator
+        */
+        //removing ROOT dependency here
+        left = B3aEventAction::leftCount[x][y][a];
+        right = B3aEventAction::rightCount[x][y][a]; //detectors
+        // cout << "left: " << left << endl;
+        // cout << "right: "<< right  << endl;
+        
+        scintiPhot = B3aEventAction::stripCount[x][y][a]; //scintillator
 
-      if(scintiPhot>0) //scintillator
-      {
-        analysisManager->FillH1(id+5, (scintiPhot) );
-        analysisManager->FillH2(id2D, (scintiPhot), ((1.0*entry)/scintiPhot) );
-        predY = predY + (scintiPhot*(p0Y+(delY*y)));
-        predX = predX + (scintiPhot*(p0X+(delX*x)));
-        totalPhot = totalPhot + scintiPhot;
+        eventData[(0*Nx*Ny)+((Ny-1-y)*Nx)+x]=(left);
+        eventData[(1*Nx*Ny)+((Ny-1-y)*Nx)+x]=(scintiPhot);
+        eventData[(2*Nx*Ny)+((Ny-1-y)*Nx)+x]=(right);
+        entry = left + right; //detectors
+        //G4cout << "ENTRY: " << entry << "X " << x << "Y " << y << G4endl;
+        if ((entry > 0) && (nevents !=0)) //detectors
+        {
+          //G4cout << " Filling " << G4endl;
+          analysisManager->FillH2(6, (x),(y), (1.0) );
+        }
+
+        if(scintiPhot>0) //scintillator
+        {
+          analysisManager->FillH1(id+5, (scintiPhot) );
+          analysisManager->FillH2(id2D, (scintiPhot), ((1.0*entry)/scintiPhot) );
+          predY = predY + (scintiPhot*(p0Y+(delY*y)));
+          predX = predX + (scintiPhot*(p0X+(delX*x)));
+          totalPhot = totalPhot + scintiPhot;
+        }
+        analysisManager->FillH2(12, (x),(y), (left) );
+        analysisManager->FillH2(13, (x),(y), (right) );
+        analysisManager->FillH2(11, (right),(left), (1) ); //P@1 VS P@2
+        analysisManager->FillH1(id, entry); //(entry)
+        leftT+=left;
+        rightT+=right;
+        id+=6;
+        id2D+=1;
       }
-      analysisManager->FillH2(12, (x),(y), (left) );
-      analysisManager->FillH2(13, (x),(y), (right) );
-      analysisManager->FillH2(11, (right),(left), (1) ); //P@1 VS P@2
-      analysisManager->FillH1(id, entry); //(entry)
-      leftT+=left;
-      rightT+=right;
-      id+=6;
-      id2D+=1;
     }
+    G4String outname = "photonCounts"+to_string(a)+".npy";
+    cnpy::npy_save(outpath+(outname),&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+    //clear eventData
+    std::fill( std::begin(eventData), std::end(eventData), 0 );
   }
   G4int photons = (G4int) analysisManager->GetH1(9)->bin_entries(0);
   if(photons>0)
@@ -202,29 +215,28 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   std::cout << "EVT LEFT TOTALS:" << leftT << std::endl;
   std::cout << "EVT RIGHT TOTALS:" << rightT << std::endl;
   std::cout << "EVT TOTAL uniques Detections:" << B3aEventAction::detPhotonIDList.size() << std::endl;
-  //Predict POSITION (position resolution)
+  // //Predict POSITION (position resolution)
 
-    G4double zpred = ((att_len/(16))*log(double(leftT)/double(rightT))  + (length_D/(2)));
-    predY  = predY/double(totalPhot);
-    predX  = predX/double(totalPhot);
-    if(interactionPosPhot.size() > 0)
-  {
+  //   G4double zpred = ((att_len/(16))*log(double(leftT)/double(rightT))  + (length_D/(2)));
+  //   predY  = predY/double(totalPhot);
+  //   predX  = predX/double(totalPhot);
+  //   if(interactionPosPhot.size() > 0)
+  // {
 
 
-    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Z-Predictor (ln(LR Ratio) by m)"),firedZ/m, zpred/m);//Z-predictor histogram
-    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Z-Predictor"), (zpred - firedZ)/m);//Z-predictor histogram
-    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Y-Predictor (ln(LR Ratio) by m)"),firedY/cm, predY/cm);//Y-predictor histogram
-    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Y-Predictor"), (predY - firedY)/cm);//Y-predictor histogram
-    analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as X-Predictor (ln(LR Ratio) by m)"),firedX/cm, predX/cm);//Z-predictor histogram
-    analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as X-Predictor"), (predX - firedX)/cm);//Z-predictor histogram
+  //   analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Z-Predictor (ln(LR Ratio) by m)"),firedZ/m, zpred/m);//Z-predictor histogram
+  //   analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Z-Predictor"), (zpred - firedZ)/m);//Z-predictor histogram
+  //   analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as Y-Predictor (ln(LR Ratio) by m)"),firedY/cm, predY/cm);//Y-predictor histogram
+  //   analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as Y-Predictor"), (predY - firedY)/cm);//Y-predictor histogram
+  //   analysisManager->FillH2(analysisManager->GetH2Id("(L-R) Photon Ratio as X-Predictor (ln(LR Ratio) by m)"),firedX/cm, predX/cm);//Z-predictor histogram
+  //   analysisManager->FillH1(analysisManager->GetH1Id("(L-R) Photon Ratio as X-Predictor"), (predX - firedX)/cm);//Z-predictor histogram
 
-  }
+  // }
 
   //data dump
-  int evtId = evt->GetEventID();
   //cnpy::npz_save("posRes.npz","data",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
-  cnpy::npy_save(outpath+("photonCounts.npy"),&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
   cnpy::npy_save(outpath+("beamData.npy"),&beamData[0],{1,2,3},"a"); //event location and momentum direction
+
   std::ofstream beamInteract(outpath+("beamInteract.txt"), std::ios_base::app);
   for(int i = 0; i<3;i++)
   {
@@ -266,14 +278,14 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
 
   //INTERACTION pos - photon counting
-  G4cout << " GAMMA ID = " << gammaID << G4endl;
+  G4cout << " GAMMA IDs = " << gammaID[0] << "|" << gammaID[1] << G4endl;
   vector<G4double> diffs;
   for(int i = 0; i<photonIDList.size();i++)
   {
     G4int photon = photonIDList[i];
     G4int pid_original = photonIDList[i];
     G4int parent = photon;
-    while(parent != gammaID)
+    while ((parent != gammaID[0]) && (parent != gammaID[1]))
     {
       if(parentTrack.find(parent)!=parentTrack.end())
       {
@@ -288,8 +300,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     }
     //now parent = gammaID, so photon is first secondary-track 
     G4ThreeVector vertexpos = vertexPosition[photon];
-    G4double x = vertexpos.x()-Ox;
-    G4double y = vertexpos.y()-Oy;
+    G4double x = vertexpos.x(); // removing the OX OY offsets
+    G4double y = vertexpos.y();
     G4double z = vertexpos.z();
     //G4cout << "(" << x <<" "<<y<<" "<<z<<")";
     for(int i = 0; i < interactionPos.size();i++)
@@ -316,40 +328,29 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     }
   }
 
-  for(G4int pid_k : detPhotonIDList)
-  {
-    //for(int tp = 0; tp<interType; tp++)
-    //for(int i = 0; i<Nx;i++)
-    //for(int j = 0;j<Ny; j++)
-    G4ThreeVector vpos = detectedPosition[pid_k];
-    G4double x = vpos.x();
-    G4double y = vpos.y();
-    G4double z = vpos.z();
+  #ifndef CompleteScanner
 
-    int xi = int (((x/length_X) + 0.5)*Nx);
-    int yi = int (((y/length_Y) + 0.5)*Ny);
-    int zi = 0;
-    if(xi==Nx){xi=Nx-1;} //right edge !
-    if(yi==Ny){yi=Ny-1;} //right edge !
-    if(z>Oz){zi = 1;}
-    int tp = detPhotonType[pid_k];
-    eventDataType[(tp*2*Nx*Ny)+(zi*Nx*Ny)+((Ny-1-yi)*Nx)+xi]+=1;
-  }
-  cnpy::npy_save(outpath+("photonCountTypes.npy"),&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
-
-
-
-
-  for(int i = 0; i<5;i++)
-  {
-    for(vector<G4double> pos : interactionPos)
+    for(G4int pid_k : detPhotonIDList)
     {
-      beamInteract << pos[i] << " ";
+      //for(int tp = 0; tp<interType; tp++)
+      //for(int i = 0; i<Nx;i++)
+      //for(int j = 0;j<Ny; j++)
+      G4ThreeVector vpos = detectedPosition[pid_k];
+      G4double x = vpos.x();
+      G4double y = vpos.y();
+      G4double z = vpos.z();
+
+      int xi = int (((x/length_X) + 0.5)*Nx);
+      int yi = int (((y/length_Y) + 0.5)*Ny);
+      int zi = 0;
+      if(xi==Nx){xi=Nx-1;} //right edge !
+      if(yi==Ny){yi=Ny-1;} //right edge !
+      if(z>Oz){zi = 1;}
+      int tp = detPhotonType[pid_k];
+      eventDataType[(tp*2*Nx*Ny)+(zi*Nx*Ny)+((Ny-1-yi)*Nx)+xi]+=1;
     }
-    beamInteract << endl;
-  }
-  beamInteract << endl;
-  beamInteract.close(); 
+    cnpy::npy_save(outpath+("photonCountTypes.npy"),&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
+  #endif
 
   string psmFile = outpath+("photonSiPMData.txt");
   std::ofstream photonSiPM(psmFile, std::ios_base::app);
@@ -363,6 +364,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
   photonSiPM << endl;
   photonSiPM.close();
+  
+
   #ifdef  ReflectionTracking
     string reflectfile = outpath+("photonReflectData.txt");
     string reflectfile2 = outpath+("photonReflectCount.txt");
@@ -385,6 +388,18 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     photonReflect << endl;
     photonReflect.close();
   #endif
+
+    for(int i = 0; i<6;i++)
+    {
+      for(vector<G4double> pos : interactionPos)
+      {
+        beamInteract << pos[i] << " "; // note that this is in global coordinates!
+      }
+      beamInteract << endl;
+    }
+    beamInteract << endl;
+    beamInteract.close(); 
+
     string volFile = outpath+("volProcess.txt");
     std::ofstream volStream(volFile, std::ios_base::app);
       volStream << VolAbsorption << " ";
@@ -431,6 +446,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   interactionPosPhot.clear();
   interactionPosCompt.clear();
   gammaProcessIDList.clear();
+  gammaIDCounter = 0;
   detectedPosition.clear();
   detPhotonType.clear();
   parentTrack.clear();

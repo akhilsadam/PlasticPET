@@ -1,41 +1,44 @@
 #ifndef _GDMLDETECTORCONSTRUCTION_H_
 #define _GDMLDETECTORCONSTRUCTION_H_
-#include "Version.hh"
-#include "DetectorConstruction.hh"
-#include "globals.hh"
+#include <Version.hh>
+#include <DetectorConstruction.hh>
+#include <globals.hh>
 
 
-#include "G4NistManager.hh"
-#include "G4RunManager.hh"
-#include "G4Box.hh"
-#include "G4Tubs.hh"
-#include "G4LogicalVolume.hh"
-#include "G4PVPlacement.hh"
-#include "G4RotationMatrix.hh"
-#include "G4Transform3D.hh"
-#include "G4SDManager.hh"
-#include "G4MultiFunctionalDetector.hh"
-#include "G4VPrimitiveScorer.hh"
-#include "G4PSEnergyDeposit.hh"
-#include "G4PSDoseDeposit.hh"
-#include "G4PSNofCollision.hh"
-#include "G4VisAttributes.hh"
-#include "G4PhysicalConstants.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4VSDFilter.hh"
-#include "G4SDParticleFilter.hh"
-#include "G4Scintillation.hh"
-#include "G4OpticalSurface.hh"
-#include "G4LogicalSkinSurface.hh"
-#include "G4PhysicalConstants.hh"
+#include <G4NistManager.hh>
+#include <G4RunManager.hh>
+#include <G4Box.hh>
+#include <G4Tubs.hh>
+#include <G4LogicalVolume.hh>
+#include <G4PVPlacement.hh>
+#include <G4RotationMatrix.hh>
+#include <G4Transform3D.hh>
+#include <G4SDManager.hh>
+#include <G4MultiFunctionalDetector.hh>
+#include <G4VPrimitiveScorer.hh>
+#include <G4PSEnergyDeposit.hh>
+#include <G4PSDoseDeposit.hh>
+#include <G4PSNofCollision.hh>
+#include <G4VisAttributes.hh>
+#include <G4PhysicalConstants.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4VSDFilter.hh>
+#include <G4SDParticleFilter.hh>
+#include <G4Scintillation.hh>
+#include <G4OpticalSurface.hh>
+#include <G4LogicalSkinSurface.hh>
+#include <G4PhysicalConstants.hh>
 
-#include "G4GeometryManager.hh"
-#include "G4VVisManager.hh"
+#include <G4GeometryManager.hh>
+#include <G4VVisManager.hh>
 #ifdef LYSOTest
-	#include "LYSO.hh"
+	#include <LYSO.hh>
 #endif
 
-#include "G4GDMLParser.hh"
+#include <G4AssemblyVolume.hh>
+#include <G4PhysicalVolumeStore.hh>
+
+#include <G4GDMLParser.hh>
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -59,6 +62,51 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4Material* TPB;
 	G4Material* detMAT;
 	double rho_pvt = 1.023*g/cm3;
+
+	G4ThreeVector R0 = G4ThreeVector(R,0,0);
+	G4ThreeVector OFV = G4ThreeVector(Ox,Oy,0);
+
+	G4ThreeVector* GetPosition(int nVertex, string name, G4GDMLParser* parser)
+	{
+		double x = 0;
+		double y = 0;
+		double z = 0;
+		for(int j=0;j<nVertex;j++)
+		{
+			name = name+"_v"+to_string(j);
+			G4ThreeVector parsedPosition = parser->GetPosition(name);
+			x = x + (parsedPosition.x()/nVertex);
+			y = y + (parsedPosition.y()/nVertex);
+			z = z + (parsedPosition.z()/nVertex);
+		}
+		return new G4ThreeVector(x,y,z);
+	}
+	G4ThreeVector GetOrigin(vector<G4ThreeVector>& positions)
+	{	
+		double x = 0;
+		double y = 0;
+		double z = 0;
+		double nVertex = positions.size();
+		for(int i=0; i<nVertex;i++)
+		{
+			G4ThreeVector position = positions[i];
+			x = x + (double) (position.x()/nVertex);
+			y = y + (double) (position.y()/nVertex);
+			z = z + (double) (position.z()/nVertex);
+			//cout << x << y << z << endl;
+		}
+		return G4ThreeVector(-x,-y,-z);
+	}
+	G4ThreeVector* Rotate(int i)
+	{
+		double xy = sqrt(pow(R0.x(),2)+pow(R0.y(),2));
+		double angle = i*(2*M_PI/NArray)+atan2(R0.y(),R0.x());
+		return new G4ThreeVector(xy*cos(angle),xy*sin(angle),R0.z());
+	}
+	G4int copyNumber(G4int i)
+	{
+		return (NAssemblyElements+1)*i + copyNumberOffset;
+	}
 	void UPDATE_GEO_MPT()
 	{
 		MPT_UPDATE = 1;
@@ -208,9 +256,8 @@ class GDMLDetectorConstruction : public DetectorConstruction
 			EJ208->GetMaterialPropertiesTable()->RemoveProperty("RAYLEIGH");
 			EJ208->GetMaterialPropertiesTable()->AddProperty("ABSLENGTH",PhotonEnergyR,att_length_ejR,sz0);// MODIFIED WITH DATA
 			EJ208->GetMaterialPropertiesTable()->AddProperty("RAYLEIGH",PhotonEnergyR,rayScr_length_pvtR,sz0);// MODIFIED WITH DATA
-		int i = 0;
 		//G4NistManager* man = G4NistManager::Instance();
-		while(true)
+		for(int i = 0; i< World->GetLogicalVolume()->GetNoDaughters(); i++)
 		{
 			G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
 			if(V!=NULL)
@@ -225,23 +272,37 @@ class GDMLDetectorConstruction : public DetectorConstruction
 				{
 					//V->GetLogicalVolume()->SetMaterial(man->FindMaterial("G4_AIR"));
 					V->GetLogicalVolume()->SetMaterial(EJ208);
+
 					#ifdef SingleStrip
 					G4cout <<"updated EJ208!" <<G4endl;
 					#endif
 				}
 			}
-			else
-			{
-				break;
-			}
-			
-			i+=1;
 		}
 		//World->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetMaterial()->GetMaterialPropertiesTable()->DumpTable();
 	}
 	void WorldBuild(G4GDMLParser& parser, G4VPhysicalVolume *setWorld )
    {
 	   G4cout << "--//-------------------------------------------WORLDBUILDING-------------------------------------------//--" << G4endl;
+// ---- get positions
+		vector<G4ThreeVector> positions;
+		int i = 0;
+		while(true)
+		{
+			G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
+			if(V!=NULL)
+			{			
+				positions.push_back(V->GetTranslation());
+			}
+			else
+			{
+				break;
+			}
+			i+=1;
+		}
+	//cout << positions.size() << endl;
+
+
 //----------------------------------------------------------------------DEF MAT----------------------------------------------------////
 	G4NistManager* man = G4NistManager::Instance();
 
@@ -615,11 +676,30 @@ class GDMLDetectorConstruction : public DetectorConstruction
 			}
 		#endif
 
+	// using https://geant4.web.cern.ch/sites/geant4.web.cern.ch/files/geant4/collaboration/workshops/users2002/talks/lectures/geoadvanced.pdf
+	G4AssemblyVolume* Array =  new G4AssemblyVolume();
+	G4ThreeVector position = *(new G4ThreeVector());
+	// G4ThreeVector rotation;
+	G4ThreeVector origin = GetOrigin(positions);
+	position = origin - OFV;
+	// cout << origin.x() << origin.y() << origin.z() << endl;
+	// cout << position.x() << position.y() << position.z() << endl;
+	G4RotationMatrix* rotateMatrix = new G4RotationMatrix();
+
+	//G4PhysicalVolumeStore* STOCK = G4PhysicalVolumeStore::GetInstance();
+	// vector<G4RotationMatrix> rotationMatrices;
+
+	// vector<G4LogicalVolume*> scintillatorVOL;
+	// vector<G4LogicalVolume*> separatorVOL;
+	// vector<G4LogicalVolume*> sipmVOL;
+
+	//note assuming pre-translated shapes (8 vertex rectangular prism and 16 vertex rectangular pipe)
+
 	G4LogicalVolume* EJvol;
 	G4VPhysicalVolume* EJvol_P;
 	G4LogicalSkinSurface* EJsurf;
 	G4String a;
-	for (G4int i = 1; i <= 48; i++) 
+	for (G4int i = 1; i <= NUnit; i++) 
 	{
         //char a[100];
 		a = "S_EJ208(";
@@ -628,18 +708,27 @@ class GDMLDetectorConstruction : public DetectorConstruction
         //sprintf(a,"%d", i);
         //strcat(a,")");
         EJvol = parser.GetVolume(a);
-		/// adding roughened end caps to help with detection.
+		// adding roughened end caps to help with detection?
+		// positions.push_back(*(GetPosition(8,"",&parser))); -----
+		// position = parser.GetPosition(a);
+		// rotation = parser.GetRotation(a);
+		// rotateMatrix = new G4RotationMatrix();
+		// rotateMatrix->rotateX(rotation.x());
+		// rotateMatrix->rotateY(rotation.y());
+		// rotateMatrix->rotateZ(rotation.z());
 		
 		/// 
 	  	EJvol->SetMaterial(EJ208);
 	  	EJvol->SetVisAttributes (red_col);
-	  	EJsurf = new G4LogicalSkinSurface("surfEJ_L",EJvol, surfEJ); 
-    }
+	  	EJsurf = new G4LogicalSkinSurface("surfEJ_L",EJvol, surfEJ);
+
+		Array->AddPlacedVolume(EJvol,position,rotateMatrix);
+	}
 
 	G4LogicalVolume* VKvol;
 	G4VPhysicalVolume* VKvol_P;
 	G4LogicalSkinSurface* VKsurf;
-	for (G4int i = 1; i <= 48; i++) 
+	for (G4int i = 1; i <= NUnit; i++) 
 	{
         //char a[100];
 		a = "S_Vikuiti(";
@@ -649,14 +738,22 @@ class GDMLDetectorConstruction : public DetectorConstruction
         //strcat(a,")");
         VKvol = parser.GetVolume(a);
 		#ifndef DISABLEVK
+			// position = parser.GetPosition(a);
+			// rotation = parser.GetRotation(a);
+			// rotateMatrix = new G4RotationMatrix();
+			// rotateMatrix->rotateX(rotation.x());
+			// rotateMatrix->rotateY(rotation.y());
+			// rotateMatrix->rotateZ(rotation.z());
+
 			VKvol->SetMaterial(Vikuiti);
 			VKvol->SetVisAttributes (blue_col);
 			VKsurf = new G4LogicalSkinSurface("surfVK_L",VKvol, surfVK);
-		#endif
-		#ifdef DISABLEVK
+		#else
 			VKvol->SetMaterial(Air);
 			VKvol->SetVisAttributes (invis_col);
 		#endif
+
+		Array->AddPlacedVolume(VKvol,position,rotateMatrix);
     }
 
 	//--------- Detecting (SiPM like) Endcap Geometry -------------//\\
@@ -664,23 +761,59 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4double dX = 7.74*cm; G4double dY = 10.32*cm; G4double dZ = 1*cm;
 	G4Box* det = new G4Box("det", dX/2, dY/2, dZ/2);
 	//G4Box* ydet = new G4Box("ydet", 0.5*cm, dY/2, length_D/2);
-	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,detMAT,"detVOLR");
-	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,detMAT,"detVOLL");
+	G4LogicalVolume* logicDetL = new G4LogicalVolume(det,detMAT,detectorLeftName);
+	G4LogicalVolume* logicDetR = new G4LogicalVolume(det,detMAT,detectorRightName);
 	//G4LogicalVolume* logicDetY = new G4LogicalVolume(ydet,EJ208,"detVOLY");
-	logicDetR->SetVisAttributes (det_col);
 	logicDetL->SetVisAttributes (det_col);
+	logicDetR->SetVisAttributes (det_col);
 	//logicDetY->SetVisAttributes (det_col);
-    G4ThreeVector pos = G4ThreeVector(-2.58*cm,4.83*cm,-0.5001*cm);
-	G4ThreeVector pos2 = G4ThreeVector(-2.58*cm,4.83*cm,(length_D+0.5001*cm));
+    G4ThreeVector pos = G4ThreeVector(Ox,Oy,-0.5001*cm)+position;
+	G4ThreeVector pos2 = G4ThreeVector(Ox,Oy,(length_D+0.5001*cm))+position;
 	//G4ThreeVector pos3 = G4ThreeVector((-2.58*cm-(dX/2)-0.5001*cm),4.83*cm,(length_D/2));
-	new G4PVPlacement(0,pos,"det",logicDetR,World, false,0,fCheckOverlaps);       // checking overlaps 
-	new G4PVPlacement(0,pos2,"det",logicDetL,World, false,0,fCheckOverlaps); 
+	//new G4PVPlacement(0,pos,"det",logicDetR,World, false,0,fCheckOverlaps);       // checking overlaps 
+	//new G4PVPlacement(0,pos2,"det",logicDetL,World, false,0,fCheckOverlaps); 
 	//new G4PVPlacement(0,pos3,"ydet",logicDetY,World, false,0,fCheckOverlaps); 
+	
+	//rotateMatrix = new G4RotationMatrix();
+	Array->AddPlacedVolume(logicDetR,pos, rotateMatrix);
+	Array->AddPlacedVolume(logicDetL,pos2, rotateMatrix);
 
+		
+	World->GetLogicalVolume()->ClearDaughters();
+	
+	for( unsigned int i = 0; i < Na; i++ ) 
+	{
+		// Translation of the assembly inside the world
+		G4ThreeVector arrayPosition = ((*Rotate(i)));
+		G4ThreeVector& positionRef = arrayPosition;
+		rotateMatrix = new G4RotationMatrix();
+		rotateMatrix->rotateZ(i*(double)(2*M_PI/NArray));
+		Array->MakeImprint(World->GetLogicalVolume(),positionRef,rotateMatrix,copyNumber(i),false);
+	}
 
-	#ifdef CompleteScanner
-		cout << "\nUSING COMPLETE SCANNER GEOMETRY\n"<<endl;
-	#endif
+	for(i = 0; i< World->GetLogicalVolume()->GetNoDaughters(); i++)
+	{
+		G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
+		if(V!=NULL)
+		{			
+			//cout << V->GetName() << endl;
+			string name = V->GetName();
+			if(name.find(scintillatorName) != std::string::npos)
+			{	
+				G4LogicalVolume* logicalVol = V->GetLogicalVolume();
+				EJsurf = new G4LogicalSkinSurface("surfEJ_L",logicalVol, surfEJ);
+			}
+			else if(name.find(vikuitiName) != std::string::npos)
+			{
+				G4LogicalVolume* logicalVol = V->GetLogicalVolume();
+				VKsurf = new G4LogicalSkinSurface("surfVK_L",logicalVol, surfVK);
+			}
+		}
+	}
+	// G4VVisManager* visManager = G4VVisManager::GetConcreteInstance();
+	// G4RunManager* runManager = G4RunManager::GetRunManager();
+	// visManager->GeometryHasChanged();
+	// runManager->GeometryHasBeenModified();
 
 	#endif
 	#ifdef SingleStrip
@@ -716,7 +849,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
     }
 
 
-	for (G4int i = 2; i <= 48; i++) {
+	for (G4int i = 2; i <= NUnit; i++) {
         //char a[100];
 		a = "S_EJ208(";
 	  	a = a + to_string(i);
@@ -731,7 +864,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4LogicalVolume* VKvol;
 	G4VPhysicalVolume* VKvol_P;
 	G4LogicalSkinSurface* VKsurf;
-	for (G4int i = 1; i <= 48; i++) 
+	for (G4int i = 1; i <= NUnit; i++) 
 	{
         //char a[100];
 	  	a = "S_Vikuiti(";
@@ -792,14 +925,14 @@ class GDMLDetectorConstruction : public DetectorConstruction
     GDMLDetectorConstruction(G4GDMLParser& parser, G4VPhysicalVolume *setWorld=0) : DetectorConstruction()
    {
 
-	G4cout <<""<< G4endl;
-	G4cout << "--//\\\\Scintillator Volume ---- GDML - : " << parser.GetVolume("S_EJ208(1)")->GetSolid()->GetCubicVolume()/(cm3) << G4endl;
-	G4cout <<""<< G4endl;
+	// G4cout <<""<< G4endl;
+	// G4cout << "--//\\\\Scintillator Volume ---- GDML - : " << parser.GetVolume("S_EJ208(1)")->GetSolid()->GetCubicVolume()/(cm3) << G4endl;
+	// G4cout <<""<< G4endl;
 	Parser = &parser;
      	#ifndef SSRefractionTest
 		World = setWorld;
 		#endif
-
+	
 	//--------------
 		MPT_UPDATE = -1;
 		//WorldBuild(parser, setWorld);
@@ -820,10 +953,10 @@ class GDMLDetectorConstruction : public DetectorConstruction
   		photonFilter->add("opticalphoton");
         G4MultiFunctionalDetector* detL = new G4MultiFunctionalDetector("detL");
 		G4MultiFunctionalDetector* detR = new G4MultiFunctionalDetector("detR");
-		//G4MultiFunctionalDetector* detY = new G4MultiFunctionalDetector("detY");
+		////G4MultiFunctionalDetector* detY = new G4MultiFunctionalDetector("detY");
         G4SDManager::GetSDMpointer()->AddNewDetector(detL);
 		G4SDManager::GetSDMpointer()->AddNewDetector(detR);
-		//G4SDManager::GetSDMpointer()->AddNewDetector(detY);
+		////G4SDManager::GetSDMpointer()->AddNewDetector(detY);
         G4VPrimitiveScorer* npho = new G4PSNofCollision("nPho",0);
 		npho->SetFilter(photonFilter);
         detL->RegisterPrimitive(npho);
@@ -831,7 +964,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
         SetSensitiveDetector("detVOLL",detL);
 		SetSensitiveDetector("detVOLR",detR);
-		//SetSensitiveDetector("detVOLY",detY);
+		////SetSensitiveDetector("detVOLY",detY);
 
     }
 	G4Material* GetMaterial()
@@ -843,6 +976,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
   private:
     G4VPhysicalVolume *World;
 	G4GDMLParser* Parser;
+	G4GDMLReadStructure* GDMLReader;
     void DefineMaterials();
     G4bool  fCheckOverlaps;
 

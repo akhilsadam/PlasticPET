@@ -61,10 +61,31 @@ class B3aEventAction : public G4UserEventAction
     void AddEdep(G4double Edep)     {fTotalEnergyDeposit += Edep;};      
     G4double GetEnergyDeposit()     {return fTotalEnergyDeposit;};   
 
-    int leftCount[Nx][Ny]={}; //avoid using ROOT as an intermediary
-    int rightCount[Nx][Ny]={};
-    int stripCount[Nx][Ny]={};
+    int leftCount[Nx][Ny][Na]={}; //avoid using ROOT as an intermediary
+    int rightCount[Nx][Ny][Na]={};
+    int stripCount[Nx][Ny][Na]={};
 
+    G4ThreeVector GlobalToArrayXY(G4double x, G4double y, G4double z, G4int i)
+    {
+      double angle = i*(2*M_PI/NArray);
+      G4ThreeVector* newOrigin = new G4ThreeVector(R*cos(angle),R*sin(angle),0);
+      G4ThreeVector translatedPosition = G4ThreeVector(x,y,z) - *newOrigin;
+      // cout << "XYZ:" << x << "|" << y << "|" << z << endl;
+      // cout << "newOrigin:" << newOrigin->x() << "|" << newOrigin->y() << "|" << newOrigin->z() << endl;
+      // cout << "TP:" << translatedPosition.x() << "|" << translatedPosition.y() << "|" << translatedPosition.z() << endl;
+      double xy = sqrt(pow(translatedPosition.x(),2)+pow(translatedPosition.y(),2));
+		  double angle2 = -angle + atan2(translatedPosition.y(),translatedPosition.x());
+      return G4ThreeVector(xy*cos(angle2),xy*sin(angle2),z);
+    }
+    G4ThreeVector ArrayToGlobalXY(G4double x,G4double y,G4double z,G4int i)
+    {
+      double angle = i*(2*M_PI/NArray);
+      double cosine = cos(angle);
+      double sine = sin(angle);
+      double x_global = (R+x)*cosine - y*sine;
+      double y_global = (R+x)*sine + y*cosine;
+      return G4ThreeVector(x_global,y_global,z);
+    }
     void initializeCount()          
     {
       //reset to 0
@@ -72,24 +93,40 @@ class B3aEventAction : public G4UserEventAction
       memset(rightCount, 0, sizeof(rightCount)); 
       memset(stripCount, 0, sizeof(stripCount)); 
     };
-    void fillL(G4double x,G4double y)
+    void fillL(G4double x,G4double y,G4int A)
     {
       int xi = int (((x/length_X) + 0.5)*Nx);
       int yi = int (((y/length_Y) + 0.5)*Ny);
       if(xi==Nx){xi=Nx-1;} //right edge !
       if(yi==Ny){yi=Ny-1;} //right edge !
       //cout << "xi,x/lx:"<< xi <<"|" << x/length_X << endl;
-      leftCount[xi][yi]=leftCount[xi][yi] + 1;
+      if ((0<=xi) && (xi<Nx) && (0<=yi) && (yi<Ny) && (0<=A) && (A<Na))
+      {
+        leftCount[xi][yi][A]=leftCount[xi][yi][A] + 1;
+        //cout << "L : xi: "<< xi <<"|yi: " << yi << "|A: " << A << "|in: " << x << "|" << y << "|" << A << endl;
+      }
+      else
+      {
+        //cout << "---------ERROR L : xi: "<< xi <<"|yi: " << yi << "|A: " << A << "|in: " << x << "|" << y << "|" << A << endl;
+      }
     };
-    void fillR(G4double x,G4double y)
+    void fillR(G4double x,G4double y,G4int A)
     {
       int xi = int (((x/length_X) + 0.5)*Nx);
       int yi = int (((y/length_Y) + 0.5)*Ny);
       if(xi==Nx){xi=Nx-1;} //right edge !
       if(yi==Ny){yi=Ny-1;} //right edge !
-      rightCount[xi][yi]=rightCount[xi][yi] + 1;
+
+      if ((0<=xi) && (xi<Nx) && (0<=yi) && (yi<Ny) && (0<=A) && (A<Na))
+      {
+        rightCount[xi][yi][A]=rightCount[xi][yi][A] + 1;
+      }
+      else
+      {
+        //cout << "---------ERROR R : xi: "<< xi <<"|yi: " << yi << "|A: " << A << endl;
+      }
     };
-    void fillLRT(G4double x,G4double y,G4double z,G4double lrt)
+    void fillLRT(G4double x,G4double y,G4double z,G4double lrt,G4int A)
     {
       int xi = int (((x/length_X) + 0.5)*Nx);
       int yi = int (((y/length_Y) + 0.5)*Ny);
@@ -104,31 +141,41 @@ class B3aEventAction : public G4UserEventAction
         //rightCount[xi][yi]=rightCount[xi][yi] + 1;
       }
     };
-    void fillS(G4double x,G4double y,G4int val)
+    void fillS(G4double x,G4double y,G4int A, G4int val)
     {
       int xi = int (((x/length_X) + 0.5)*Nx);
       int yi = int (((y/length_Y) + 0.5)*Ny);
       if(xi==Nx){xi=Nx-1;} //right edge !
       if(yi==Ny){yi=Ny-1;} //right edge !
-      stripCount[xi][yi]=stripCount[xi][yi] + val;
+      
+      if ((0<=xi) && (xi<Nx) && (0<=yi) && (yi<Ny) && (0<=A) && (A<Na))
+      {
+        stripCount[xi][yi][A]=stripCount[xi][yi][A] + val;
+        //cout << "S : xi: "<< xi <<"|yi: " << yi << "|A: " << A << "|val: " << val << endl;
+      }
+      else
+      {
+        //cout << "---------ERROR S : xi: "<< xi <<"|yi: " << yi << "|A: " << A << "|val: " << val << endl;
+      }
     };
 
 
-    vector<G4ThreeVector> interactionPosPhot;
-    vector<G4ThreeVector> interactionPosCompt;
-    vector<vector<double>> interactionPos;
-    vector<vector<double>> interactionPosTrack;
+    vector<G4ThreeVector> interactionPosPhot; // global
+    vector<G4ThreeVector> interactionPosCompt; // global
+    vector<vector<double>> interactionPos; // x,y,z,photonCount,t,gammaID // global
+    vector<vector<double>> interactionPosTrack; 
     vector<int> gammaProcessIDList; // compton,photo, or other (0,1,2)
-    map<G4int,G4ThreeVector> detectedPosition; // pid->ThreeVector Position.
+    map<G4int,G4ThreeVector> detectedPosition; // pid->global ThreeVector Position.
     map<G4int,G4int> detPhotonType; // photon pid->gamma interaction type.
     map<G4int,G4int> parentTrack; // key: currentID, value: parentID
-    map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: vertexPosition
+    map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: global vertexPosition
     vector<G4int> photonIDList; // list of all currentIDs
     vector<G4int> detPhotonIDList; // list of all currentIDs detected
     G4int particleIDnum;
-    G4int gammaID;
+    vector<G4int> gammaID;
+    G4int gammaIDCounter = 0;
     G4double threshold = 0.00001;
-    vector<vector<double>> photonSiPMData; //(X,Y,Z,T,L)
+    vector<vector<double>> photonSiPMData; //(X,Y,Z,T,A,L)
     vector<vector<double>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle, processName)
     map<G4int,G4ThreeVector> electronStartPosition; //(electron id, starting position)
     vector<double> electronPath; // (double pathlength)

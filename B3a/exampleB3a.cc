@@ -87,6 +87,9 @@ int main(int argc,char** argv)
   // Optionally: choose a different Random engine...
   //
   // G4Random::setTheEngine(new CLHEP::MTwistEngine);
+  G4Random::setTheEngine(new CLHEP::RanecuEngine());
+  G4long seed = time(NULL);
+  G4Random::setTheSeed(seed);
 
   // Construct the default run manager
   //
@@ -112,7 +115,8 @@ int main(int argc,char** argv)
   //B3DetectorConstruction detr = (B3DetectorConstruction) (*(new GDMLDetectorConstruction(parser.GetWorldVolume())));
   //B3DetectorConstruction* det = &detr;
   G4VPhysicalVolume* detVol0 = parser.GetWorldVolume();
-  G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
+  cout << detVol0 << endl;
+  G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser,detVol0);
   
   runManager->SetUserInitialization(det);
   //
@@ -203,7 +207,7 @@ int main(int argc,char** argv)
     UImanager->ApplyCommand("/control/execute init_vis.mac");
     #ifndef SSRefractionTest
       #ifndef VIEWPORT_ONLY
-       UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
+       //UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
       #endif
     #else
       UImanager->ApplyCommand("/vis/viewer/zoom 1024");
