@@ -792,7 +792,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 		Array->MakeImprint(World->GetLogicalVolume(),positionRef,rotateMatrix,copyNumber(i),false);
 	}
 
-	for(i = 0; i< World->GetLogicalVolume()->GetNoDaughters(); i++)
+	for(int i = 0; i< World->GetLogicalVolume()->GetNoDaughters(); i++)
 	{
 		G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
 		if(V!=NULL)
