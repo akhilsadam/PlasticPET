@@ -285,22 +285,22 @@ class GDMLDetectorConstruction : public DetectorConstruction
    {
 	   G4cout << "--//-------------------------------------------WORLDBUILDING-------------------------------------------//--" << G4endl;
 // ---- get positions
-		vector<G4ThreeVector> positions;
-		int i = 0;
-		while(true)
-		{
-			G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
-			if(V!=NULL)
-			{			
-				cout << V->GetTranslation() << endl;
-				positions.push_back(V->GetTranslation());
-			}
-			else
-			{
-				break;
-			}
-			i+=1;
-		}
+		// vector<G4ThreeVector> positions;
+		// int i = 0;
+		// while(true)
+		// {
+		// 	G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
+		// 	if(V!=NULL)
+		// 	{			
+		// 		cout << V->GetTranslation() << endl;
+		// 		positions.push_back(V->GetTranslation());
+		// 	}
+		// 	else
+		// 	{
+		// 		break;
+		// 	}
+		// 	i+=1;
+		// }
 	//cout << positions.size() << endl;
 
 
@@ -681,7 +681,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	G4AssemblyVolume* Array =  new G4AssemblyVolume();
 	G4ThreeVector position = *(new G4ThreeVector());
 	// G4ThreeVector rotation;
-	G4ThreeVector origin = GetOrigin(positions);
+	G4ThreeVector origin = G4ThreeVector(0,0,0);//GetOrigin(positions);
 	position = origin - OFV;
 	// cout << origin.x() << origin.y() << origin.z() << endl;
 	// cout << position.x() << position.y() << position.z() << endl;
