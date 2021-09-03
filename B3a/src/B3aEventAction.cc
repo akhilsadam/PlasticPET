@@ -151,7 +151,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     G4cout << "FIREDX - XPOS: " << firedX << G4endl;
   #endif
 
-
+  #ifndef NoFileWrite
   for (int a = 0;a<(Na); a++)
   {
     for(int x = 0; x<(Nx); x++)
@@ -202,6 +202,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     //clear eventData
     std::fill( std::begin(eventData), std::end(eventData), 0 );
   }
+  #endif
   // G4int photons = (G4int) analysisManager->GetH1(9)->bin_entries(0);
   // if(photons>0)
   // {
@@ -441,13 +442,16 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       
   foo22.unlock();
   barL22.unlock();
+  
+
+  // std::lock(foo22,barL22);  
+
+  // foo22.unlock();
+  // barL22.unlock();
   #endif
 
-  std::lock(foo22,barL22);  
   B3aEventAction::initializeCount();
   fRunAction->CountEvent();
-  foo22.unlock();
-  barL22.unlock();
 
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();

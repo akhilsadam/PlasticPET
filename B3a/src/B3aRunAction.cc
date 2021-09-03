@@ -151,8 +151,8 @@ void B3aRunAction::EndOfRunAction(const G4Run* run)
 
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   if ( analysisManager->IsActive() ) {  
-    G4double interacted = (analysisManager->GetH1(10)->bin_entries(0));
-    G4cout << "INTERACTED " <<interacted <<G4endl;
+    // G4double interacted = (analysisManager->GetH1(10)->bin_entries(0));
+    // G4cout << "INTERACTED " <<interacted <<G4endl;
     if (IsMaster() && (interacted !=0))
   {
     // G4int nx = 3;

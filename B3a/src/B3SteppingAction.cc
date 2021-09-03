@@ -286,7 +286,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				else
 				{
 					#ifndef TACC
-						G4cout << psN << " not accounted for" << G4endl;
+						//G4cout << psN << " not accounted for" << G4endl;
 					#endif
 				}
 
