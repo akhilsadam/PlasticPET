@@ -98,10 +98,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   
-  std::lock(foo22,barL22);
-    
-  #ifndef NoFileWrite
-  
+  std::lock(foo22,barL22);  
   
   G4int entry;
   G4int left=0;
@@ -235,6 +232,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
 
   //data dump
   //cnpy::npz_save("posRes.npz","data",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+  #ifndef NoFileWrite
   cnpy::npy_save(outpath+("beamData.npy"),&beamData[0],{1,2,3},"a"); //event location and momentum direction
 
   std::ofstream beamInteract(outpath+("beamInteract.txt"), std::ios_base::app);
@@ -276,7 +274,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     }
     beamInteract << endl;
   }
-
+  #endif
   //INTERACTION pos - photon counting
   G4cout << " GAMMA IDs = " << gammaID[0] << "|" << gammaID[1] << G4endl;
   vector<G4double> diffs;
@@ -327,7 +325,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
         }
     }
   }
-
+  #ifndef NoFileWrite
   #ifndef CompleteScanner
 
     for(G4int pid_k : detPhotonIDList)
