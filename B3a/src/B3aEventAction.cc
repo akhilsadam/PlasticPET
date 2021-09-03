@@ -96,10 +96,13 @@ void B3aEventAction::BeginOfEventAction(const G4Event* /*evt*/)
 
 void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
+  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+  
   std::lock(foo22,barL22);
+    
   #ifndef NoFileWrite
   
-  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+  
   G4int entry;
   G4int left=0;
   G4int right=0;
