@@ -97,7 +97,8 @@ void B3aEventAction::BeginOfEventAction(const G4Event* /*evt*/)
 void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
   std::lock(foo22,barL22);
-
+  #ifndef NoFileWrite
+  
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
   G4int entry;
   G4int left=0;
@@ -159,10 +160,6 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     {
       for(int y = 0; y<(Ny); y++)
       {
-        /*left = (G4int) analysisManager->GetH2(4)->bin_entries((x),(y));
-        right = (G4int) analysisManager->GetH2(5)->bin_entries((x),(y)); //detectors
-        scintiPhot = (G4int) analysisManager->GetH2(17)->bin_entries((x),(y)); //scintillator
-        */
         //removing ROOT dependency here
         left = B3aEventAction::leftCount[x][y][a];
         right = B3aEventAction::rightCount[x][y][a]; //detectors
@@ -433,15 +430,18 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
   electStream << endl;
   electStream.close();
+  #endif
+
+  B3aEventAction::initializeCount();
+  fRunAction->CountEvent();
+  foo22.unlock();
+  barL22.unlock();
 
   analysisManager->GetH2(4)->reset();
   analysisManager->GetH2(5)->reset();
   analysisManager->GetH2(17)->reset();
   analysisManager->GetH1(9)->reset();
-  /* for(int i = 0; i<photonIDList.size();i++)
-  {
-    cout << photonIDList[i]<<" ";
-  }*/
+
   interactionPos.clear();
   interactionPosPhot.clear();
   interactionPosCompt.clear();
@@ -466,10 +466,6 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   electronProcess.clear();
 
   //photonReflectProcess.clear();
-  B3aEventAction::initializeCount();
-  fRunAction->CountEvent();
-  foo22.unlock();
-  barL22.unlock();
 
 /*
  if ( detL_npho <=0 ) {
