@@ -153,15 +153,15 @@ void B3aRunAction::EndOfRunAction(const G4Run* run)
   if ( analysisManager->IsActive() ) {  
     // G4double interacted = (analysisManager->GetH1(10)->bin_entries(0));
     // G4cout << "INTERACTED " <<interacted <<G4endl;
-    if (IsMaster() && (interacted !=0))
-  {
-    // G4int nx = 3;
-    // G4int ny = 16;
-    // G4double nStrips = 1.0*nx*ny;
-    // analysisManager->GetH2(6)->multiply(1.0/interacted);
-    // analysisManager->GetH2(12)->multiply(1.0/interacted);
-    // analysisManager->GetH2(13)->multiply(1.0/interacted);
-  }
+  //   if (IsMaster() && (interacted !=0))
+  // {
+  //   // G4int nx = 3;
+  //   // G4int ny = 16;
+  //   // G4double nStrips = 1.0*nx*ny;
+  //   // analysisManager->GetH2(6)->multiply(1.0/interacted);
+  //   // analysisManager->GetH2(12)->multiply(1.0/interacted);
+  //   // analysisManager->GetH2(13)->multiply(1.0/interacted);
+  // }
     analysisManager->Write();    
     analysisManager->CloseFile();
   }    
