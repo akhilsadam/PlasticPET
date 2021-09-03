@@ -69,7 +69,7 @@ const double  att_len = 400*cm;
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
     #define G4MULTITHREADED
-    #define NoFileWrite
+    //#define NoFileWrite
     //default - define CrossSectionTest
     //#define VIEWPORT_ONLY //enable to see a 3d interactive viewport, disable for console run.
 

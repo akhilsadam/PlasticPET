@@ -97,9 +97,7 @@ void B3aEventAction::BeginOfEventAction(const G4Event* /*evt*/)
 void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  
-  std::lock(foo22,barL22);  
-  
+   
   G4int entry;
   G4int left=0;
   G4int right=0;
@@ -198,7 +196,10 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       }
     }
     G4String outname = "photonCounts"+to_string(a)+".npy";
-    cnpy::npy_save(outpath+(outname),&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+    std::lock(foo22,barL22);  
+      cnpy::npy_save(outpath+(outname),&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
+    foo22.unlock();
+    barL22.unlock();
     //clear eventData
     std::fill( std::begin(eventData), std::end(eventData), 0 );
   }
@@ -233,6 +234,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   //data dump
   //cnpy::npz_save("posRes.npz","data",&eventData[0],{zvl,yvl,xvl},"a"); //event photon counts
   #ifndef NoFileWrite
+  std::lock(foo22,barL22);  
+  
   cnpy::npy_save(outpath+("beamData.npy"),&beamData[0],{1,2,3},"a"); //event location and momentum direction
 
   std::ofstream beamInteract(outpath+("beamInteract.txt"), std::ios_base::app);
@@ -274,6 +277,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     }
     beamInteract << endl;
   }
+  foo22.unlock();
+  barL22.unlock();
   #endif
   //INTERACTION pos - photon counting
   G4cout << " GAMMA IDs = " << gammaID[0] << "|" << gammaID[1] << G4endl;
@@ -347,9 +352,12 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
       int tp = detPhotonType[pid_k];
       eventDataType[(tp*2*Nx*Ny)+(zi*Nx*Ny)+((Ny-1-yi)*Nx)+xi]+=1;
     }
+    std::lock(foo22,barL22);  
     cnpy::npy_save(outpath+("photonCountTypes.npy"),&eventDataType[0],{interType,2,yvl,xvl},"a"); //event photon counts
+    foo22.unlock();
+    barL22.unlock();
   #endif
-
+  std::lock(foo22,barL22);
   string psmFile = outpath+("photonSiPMData.txt");
   std::ofstream photonSiPM(psmFile, std::ios_base::app);
   for(vector<double> pos : photonSiPMData)
@@ -363,7 +371,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   photonSiPM << endl;
   photonSiPM.close();
   
-
+  
   #ifdef  ReflectionTracking
     string reflectfile = outpath+("photonReflectData.txt");
     string reflectfile2 = outpath+("photonReflectCount.txt");
@@ -431,8 +439,12 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   }
   electStream << endl;
   electStream.close();
+      
+  foo22.unlock();
+  barL22.unlock();
   #endif
 
+  std::lock(foo22,barL22);  
   B3aEventAction::initializeCount();
   fRunAction->CountEvent();
   foo22.unlock();
