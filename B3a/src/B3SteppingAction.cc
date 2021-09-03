@@ -54,10 +54,10 @@
 #include <cstdlib>
 #include <map>
 
-std::mutex foo2;
-std::mutex barL2;
-G4int B3SteppingAction::id = 0;
-G4double lastEnergy=0;
+// std::mutex foo2;
+// std::mutex barL2;
+// G4int B3SteppingAction::id = 0;
+// G4double lastEnergy=0;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -74,7 +74,7 @@ B3SteppingAction::~B3SteppingAction()
 
 void B3SteppingAction::UserSteppingAction(const G4Step* step)
 {
- 	std::lock(foo2,barL2);
+ 	// std::lock(foo2,barL2);
 
 	G4double edep = (step->GetTotalEnergyDeposit())/keV;
 	G4Track* track = step->GetTrack();
@@ -333,9 +333,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			G4cout<<"//\\prim <=0"<<G4endl;
 		}*/
 		//G4cout << "/|\\--- Total (should equal the previous primary): " << (Etot) <<G4endl;
-		analysisManager->FillH1(7, (id), (Eprim+Esec-lastEnergy));
-		lastEnergy = Eprim;
-		id += 1;
+		// analysisManager->FillH1(7, (id), (Eprim+Esec-lastEnergy));
+		// lastEnergy = Eprim;
+		// id += 1;
 		if(size>0)
 		{
 			ps = postPoint->GetProcessDefinedStep();
@@ -616,8 +616,8 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 
 	
-	foo2.unlock();
-	barL2.unlock();
+	// foo2.unlock();
+	// barL2.unlock();
 }
 	//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 		
