@@ -171,24 +171,23 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
         eventData[(2*Nx*Ny)+((Ny-1-y)*Nx)+x]=(right);
         entry = left + right; //detectors
         //G4cout << "ENTRY: " << entry << "X " << x << "Y " << y << G4endl;
-        if ((entry > 0) && (nevents !=0)) //detectors
-        {
-          //G4cout << " Filling " << G4endl;
-          analysisManager->FillH2(6, (x),(y), (1.0) );
-        }
+        // if ((entry > 0) && (nevents !=0)) //detectors
+        // {
+        //   analysisManager->FillH2(6, (x),(y), (1.0) );
+        // }
 
         if(scintiPhot>0) //scintillator
         {
-          analysisManager->FillH1(id+5, (scintiPhot) );
-          analysisManager->FillH2(id2D, (scintiPhot), ((1.0*entry)/scintiPhot) );
+          // analysisManager->FillH1(id+5, (scintiPhot) );
+          // analysisManager->FillH2(id2D, (scintiPhot), ((1.0*entry)/scintiPhot) );
           predY = predY + (scintiPhot*(p0Y+(delY*y)));
           predX = predX + (scintiPhot*(p0X+(delX*x)));
           totalPhot = totalPhot + scintiPhot;
         }
-        analysisManager->FillH2(12, (x),(y), (left) );
-        analysisManager->FillH2(13, (x),(y), (right) );
-        analysisManager->FillH2(11, (right),(left), (1) ); //P@1 VS P@2
-        analysisManager->FillH1(id, entry); //(entry)
+        // analysisManager->FillH2(12, (x),(y), (left) );
+        // analysisManager->FillH2(13, (x),(y), (right) );
+        // analysisManager->FillH2(11, (right),(left), (1) ); //P@1 VS P@2
+        // analysisManager->FillH1(id, entry); //(entry)
         leftT+=left;
         rightT+=right;
         id+=6;
@@ -203,13 +202,13 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     //clear eventData
     std::fill( std::begin(eventData), std::end(eventData), 0 );
   }
-  G4int photons = (G4int) analysisManager->GetH1(9)->bin_entries(0);
-  if(photons>0)
-  {
-    analysisManager->FillH1(10, 0.5, (1.0/nevents) );
-  }
-  analysisManager->FillH1(23, leftT);//left and right aggregate histograms
-  analysisManager->FillH1(24, rightT);
+  // G4int photons = (G4int) analysisManager->GetH1(9)->bin_entries(0);
+  // if(photons>0)
+  // {
+  //   analysisManager->FillH1(10, 0.5, (1.0/nevents) );
+  // }
+  // analysisManager->FillH1(23, leftT);//left and right aggregate histograms
+  // analysisManager->FillH1(24, rightT);
   std::cout << "EVT LEFT TOTALS:" << leftT << std::endl;
   std::cout << "EVT RIGHT TOTALS:" << rightT << std::endl;
   std::cout << "EVT TOTAL uniques Detections:" << B3aEventAction::detPhotonIDList.size() << std::endl;

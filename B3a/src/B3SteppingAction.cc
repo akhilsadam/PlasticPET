@@ -107,7 +107,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		fEventAction->parentTrack[track->GetTrackID()] = track->GetParentID();
 		fEventAction->vertexPosition[track->GetTrackID()] = track->GetVertexPosition();
 	}
- 	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();     
+ 	// G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();     
 
  	//longitudinal profile of deposited energy
  	//randomize point of energy deposotion
@@ -142,49 +142,49 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 	//cout << detA <<endl;
 	G4ThreeVector xyzS = fEventAction->GlobalToArrayXY(x,y,z,detA);
 
- 	analysisManager->FillH1(0, yshifted, edep);//y,edep
- 	analysisManager->FillH2(0, xshifted, yshifted, edep);
- 	analysisManager->FillH3(0, xshifted, yshifted, zshifted, edep);
+ 	// analysisManager->FillH1(0, yshifted, edep);//y,edep
+ 	// analysisManager->FillH2(0, xshifted, yshifted, edep);
+ 	// analysisManager->FillH3(0, xshifted, yshifted, zshifted, edep);
 	 
 	G4double Eprim = (track->GetTotalEnergy()/keV); 
 
-	if(track->GetParticleDefinition()->GetParticleName() == "opticalphoton")
-	{
-		if(track->GetTrackStatus() == fStopAndKill)
-		{
-			G4double x  = track->GetPosition().x();
-       		G4double y  = track->GetPosition().y();
-       		G4double z  = track->GetPosition().z();
-			analysisManager->FillH3(1,xyzS.x(),xyzS.y(),xyzS.z(),1);
-			if(prePoint->GetStepStatus() == fGeomBoundary)
-			{
-				analysisManager->FillH1(2,1);
-				const G4VProcess* pds = postPoint->GetProcessDefinedStep();
-				if(pds)
-				{
-					//cout << "PDS: " << pds->GetProcessName() << G4endl;
-					const std::string pdsN = pds->GetProcessName();
-					if(pdsN.compare("Transportation")==0)
-					{
-						analysisManager->FillH1(3,0.5);
-					}
-					else if(pdsN.compare("OpAbsorption")==0)
-					{
-						analysisManager->FillH1(3,0.25);
-					}
-					else
-					{
-						analysisManager->FillH1(3,0.75);
-					}
-				}
-			}
-			else
-			{
-				analysisManager->FillH1(2,0);
-			}
-		}
+	// if(track->GetParticleDefinition()->GetParticleName() == "opticalphoton")
+	// {
+	// 	if(track->GetTrackStatus() == fStopAndKill)
+	// 	{
+	// 		G4double x  = track->GetPosition().x();
+    //    		G4double y  = track->GetPosition().y();
+    //    		G4double z  = track->GetPosition().z();
+	// 		// analysisManager->FillH3(1,xyzS.x(),xyzS.y(),xyzS.z(),1);
+	// 		if(prePoint->GetStepStatus() == fGeomBoundary)
+	// 		{
+	// 			// analysisManager->FillH1(2,1);
+	// 			const G4VProcess* pds = postPoint->GetProcessDefinedStep();
+	// 			if(pds)
+	// 			{
+	// 				//cout << "PDS: " << pds->GetProcessName() << G4endl;
+	// 				const std::string pdsN = pds->GetProcessName();
+	// 				if(pdsN.compare("Transportation")==0)
+	// 				{
+	// 					analysisManager->FillH1(3,0.5);
+	// 				}
+	// 				else if(pdsN.compare("OpAbsorption")==0)
+	// 				{
+	// 					analysisManager->FillH1(3,0.25);
+	// 				}
+	// 				else
+	// 				{
+	// 					analysisManager->FillH1(3,0.75);
+	// 				}
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			analysisManager->FillH1(2,0);
+	// 		}
+	// 	}
 
-	}
+	// }
 	
  	const std::vector< const G4Track* >* secondaries = step->GetSecondaryInCurrentStep();  
 	 const int size = secondaries->size();
@@ -242,45 +242,45 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 
 			//G4cout << "Filled Photon Deposition" << G4endl;
-			analysisManager->FillH1(8, (xyzS.x()), 1);
-			analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), 1);
+			// analysisManager->FillH1(8, (xyzS.x()), 1);
+			// analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), 1);
 
 			fEventAction->fillS(xyzS.x(),xyzS.y(),detA,1); // OBSOLETE(right): // analysisManager->FillH2(17, (xyzS.x()),(xyzS.y()), 1);
 
-			analysisManager->FillH1(9, 0.5, 1);
+			// analysisManager->FillH1(9, 0.5, 1);
 			ps = postPoint->GetProcessDefinedStep();
 			if(ps)
 			{		
 				const std::string psN = ps->GetProcessName();
-				if(psN.compare("eIoni")==0)
-				{
-					//Electron Ionization (Photoelectric)
-					analysisManager->FillH2(7, (xyzS.x()),(xyzS.y()), 1);
+				// if(psN.compare("eIoni")==0)
+				// {
+				// 	//Electron Ionization (Photoelectric)
+				// 	analysisManager->FillH2(7, (xyzS.x()),(xyzS.y()), 1);
 					
-				}
-				else if(psN.compare("msc")==0)
-				{
-					//COMPTON
-					analysisManager->FillH2(8, (xyzS.x()),(xyzS.y()), 1);
-					//analysisManager->FillH1(10, ((Dy/2) - (y-Oy)), 1);
-				}
-				else if(psN.compare("Cerenkov")==0)
-				{
-					//Cerenkov
-					analysisManager->FillH2(9, (xyzS.x()),(xyzS.y()), 1);
-					//analysisManager->FillH1(11, ((Dy/2) - (y-Oy)), 1);
-				}
-				else if(psN.compare("eBrem")==0)
-				{
-					//Electron Braking radiation
-					analysisManager->FillH2(10, (xyzS.x()),(xyzS.y()), 1);
-					//analysisManager->FillH1(12, ((Dy/2) - (y-Oy)), 1);
-				}
-				else if(psN.compare("Transportation")==0)
+				// }
+				// else if(psN.compare("msc")==0)
+				// {
+				// 	//COMPTON
+				// 	analysisManager->FillH2(8, (xyzS.x()),(xyzS.y()), 1);
+				// 	//analysisManager->FillH1(10, ((Dy/2) - (y-Oy)), 1);
+				// }
+				// else if(psN.compare("Cerenkov")==0)
+				// {
+				// 	//Cerenkov
+				// 	analysisManager->FillH2(9, (xyzS.x()),(xyzS.y()), 1);
+				// 	//analysisManager->FillH1(11, ((Dy/2) - (y-Oy)), 1);
+				// }
+				// else if(psN.compare("eBrem")==0)
+				// {
+				// 	//Electron Braking radiation
+				// 	analysisManager->FillH2(10, (xyzS.x()),(xyzS.y()), 1);
+				// 	//analysisManager->FillH1(12, ((Dy/2) - (y-Oy)), 1);
+				// }
+				if(psN.compare("Transportation")==0) //note removed else
 				{
 					//motion - do nothing - un-double-count
-					analysisManager->FillH1(8, (xyzS.x()), -1);
-					analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), -1);
+					// analysisManager->FillH1(8, (xyzS.x()), -1);
+					// analysisManager->FillH2(1, (xyzS.x()),(xyzS.y()), -1);
 					fEventAction->fillS(xyzS.x(),xyzS.y(),detA,-1); // OBSOLETE(right): // analysisManager->FillH2(17, xyzS.x(),xyzS.y(), -1);
 				}
 				else
@@ -297,27 +297,27 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 		Esec += (pp->GetKineticEnergy()/keV);
 	
-		bool filled = false;
-		for(int i = 0; i < titleSize; i++)
-		{
-			//G4cout << pdVar << " " << title[i] << " " << titleSize << G4endl;
-			if(pdVar.compare(title[i])==0)
-			{
-				filled = true;
-				//add to histogram!!
-				analysisManager->FillH1(1, (0.5+i), 1);
-				break;
+		// bool filled = false;
+		// for(int i = 0; i < titleSize; i++)
+		// {
+		// 	//G4cout << pdVar << " " << title[i] << " " << titleSize << G4endl;
+		// 	if(pdVar.compare(title[i])==0)
+		// 	{
+		// 		filled = true;
+		// 		//add to histogram!!
+		// 		analysisManager->FillH1(1, (0.5+i), 1);
+		// 		break;
 	
-			}
-		}
+		// 	}
+		// }
 			
-		if(!filled)
-		{
-		G4cout
-			<< G4endl
-			<< "------//\\---------- broke if statement "<< pdVar <<" -///////////\\\\\\\\\\"
-			<< G4endl;
-		}
+		// if(!filled)
+		// {
+		// G4cout
+		// 	<< G4endl
+		// 	<< "------//\\---------- broke if statement "<< pdVar <<" -///////////\\\\\\\\\\"
+		// 	<< G4endl;
+		// }
 
 	}
 
@@ -344,19 +344,19 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				G4String psNm = ps->GetProcessName();
 				
 				//G4cout<<(ps->GetProcessName())<<G4endl;
-				analysisManager->FillH2(14, (xyzS.x()),(xyzS.y()), 1);
+				// analysisManager->FillH2(14, (xyzS.x()),(xyzS.y()), 1);
 				fEventAction->interactionPos.push_back({x,y,z,0,postPoint->GetGlobalTime()/ns,track->GetTrackID()});//postPoint->GetLocalTime()
 				G4int gammaProcessID = 2;
 				if(psNm.compare("phot")==0)
 				{
-					analysisManager->FillH2(15, xyzS.x(),xyzS.y(), 1);
+					// analysisManager->FillH2(15, xyzS.x(),xyzS.y(), 1);
 					fEventAction->interactionPosPhot.push_back(G4ThreeVector(x,y,z));
 					gammaProcessID = 1;
 				}
 				else if(psNm.compare("compt")==0)
 				{
 					//COMPTON
-					analysisManager->FillH2(16, xyzS.x(),xyzS.y(), 1);
+					// analysisManager->FillH2(16, xyzS.x(),xyzS.y(), 1);
 					fEventAction->interactionPosCompt.push_back(G4ThreeVector(x,y,z));
 					gammaProcessID = 0;
 				}
