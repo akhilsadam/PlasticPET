@@ -191,8 +191,8 @@ int main(int argc,char** argv)
   // The Root output type (Root) is selected in B3Analysis.hh.
   // The verbose level can be also set via UI commands
   // /score/ntuple/writerVerbose level
-  G4TScoreNtupleWriter<G4AnalysisManager> scoreNtupleWriter;
-  scoreNtupleWriter.SetVerboseLevel(0);
+  // G4TScoreNtupleWriter<G4AnalysisManager> scoreNtupleWriter;
+  // scoreNtupleWriter.SetVerboseLevel(0);
 
   // Process macro or start UI session
   //

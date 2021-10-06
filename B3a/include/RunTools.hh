@@ -26,7 +26,7 @@ private:
 		int lpad = (int)(percentage * PBWIDTH);
 		int rpad = PBWIDTH - lpad;
 		//char b = 219;
-		system("COLOR 09");
+		// system("COLOR 09");
 		//printf("\r%3d /%3d [%.*s%*s]", currentEventNumber, totalEvents, lpad, PBSTR, rpad, "");
 		printf("\r Events:%3d /%3d [", currentEventNumber, totalEvents);
 		for (int i = 0; i < lpad; i++) {

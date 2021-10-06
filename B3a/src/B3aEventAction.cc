@@ -60,8 +60,8 @@ G4int fCollID_cryst_en;
 G4int fCollID_cryst_y;*/
 using namespace std;
 
-G4int detL_npho;
-G4int detR_npho;
+// G4int detL_npho;
+// G4int detR_npho;
 std::mutex foo22;
 std::mutex barL22;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -96,7 +96,7 @@ void B3aEventAction::BeginOfEventAction(const G4Event* /*evt*/)
 
 void B3aEventAction::EndOfEventAction(const G4Event* evt )
 {
-  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+  // G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
    
   G4int entry;
   G4int left=0;
@@ -277,9 +277,8 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     }
     beamInteract << endl;
   }
-  foo22.unlock();
-  barL22.unlock();
-  #endif
+
+ 
   //INTERACTION pos - photon counting
   G4cout << " GAMMA IDs = " << gammaID[0] << "|" << gammaID[1] << G4endl;
   vector<G4double> diffs;
@@ -330,7 +329,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
         }
     }
   }
-  #ifndef NoFileWrite
+  
   #ifndef CompleteScanner
 
     for(G4int pid_k : detPhotonIDList)
@@ -357,7 +356,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     foo22.unlock();
     barL22.unlock();
   #endif
-  std::lock(foo22,barL22);
+  
   string psmFile = outpath+("photonSiPMData.txt");
   std::ofstream photonSiPM(psmFile, std::ios_base::app);
   for(vector<double> pos : photonSiPMData)
@@ -453,10 +452,10 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   B3aEventAction::initializeCount();
   fRunAction->CountEvent();
 
-  analysisManager->GetH2(4)->reset();
-  analysisManager->GetH2(5)->reset();
-  analysisManager->GetH2(17)->reset();
-  analysisManager->GetH1(9)->reset();
+  // analysisManager->GetH2(4)->reset();
+  // analysisManager->GetH2(5)->reset();
+  // analysisManager->GetH2(17)->reset();
+  // analysisManager->GetH1(9)->reset();
 
   interactionPos.clear();
   interactionPosPhot.clear();

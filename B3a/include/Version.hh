@@ -36,7 +36,8 @@ const int NUnit = Nx*Ny;
 const int NArray = 24;
 const int NAssemblyElements = 98;
 const int copyNumberOffset = 1; // anything in Z+
-const double R = (78.4/2)*cm + Dx/2;
+const double R_0 = (78.4/2)*cm;
+const double R = R_0 + Dx/2;
 
 const string detectorLeftName = "detVOLL";
 const string detectorRightName = "detVOLR";
@@ -65,11 +66,15 @@ const double  att_len = 400*cm;
 #ifdef EJ_SIGMAALPHA
     const double sga_EJ = EJ_SIGMAALPHA;
 #endif
+// #ifdef via cxx flags
+//     #define SensitivityScan
+// #endif
 
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
     #define G4MULTITHREADED
-    //#define NoFileWrite
+    #define MakeThreadSafeFast // removes some safety checks that should not be needed unless (enable if editing!)
+    //#define NoFileWrite // does not produce output - for debugging
     //default - define CrossSectionTest
     //#define VIEWPORT_ONLY //enable to see a 3d interactive viewport, disable for console run.
 
@@ -79,11 +84,26 @@ const double  att_len = 400*cm;
     //#define SSReflectionTest // reflection test - needs SingleStrip define and ScintillationDisable
     //#define SSRefractionTest // refraction test - needs SingleStrip define and ScintillationDisable (NOT ReflectionDisable)
     #define CrossSectionTest // prints default cross sections! MAKE SURE THIS IS ENABLED! unless using PVT MPT
-    //#define ZPredictorTest // plots graphs to find the Z-location of the gamma! Will vary Z-position of Gamma hit!
-    //#define YPredictorTest // plots graphs to find the (and X) Y-location of the gamma! Will vary Y-position of Gamma hit!
-    #define RadialSource
+
     //#define ReflectionTracking // saves data on photon reflections/absorptions
-    #define ElectronPathLength // saves data on electron mean displacement and path length
+    //#define ElectronPathLength // saves data on electron mean displacement and path length -- needs thread locking!
+
+    #ifdef SingleArrayTest
+        #define Singles
+        #define NoQE
+    #endif
+
+    #ifndef NoQE
+        #define QuantumEfficiency
+    #endif
+
+    #ifndef NoRadialSource
+        #define RadialSource
+    #else
+        #define ZPredictorTest // plots graphs to find the Z-location of the gamma! Will vary Z-position of Gamma hit!
+        #define YPredictorTest // plots graphs to find the (and X) Y-location of the gamma! Will vary Y-position of Gamma hit!
+    #endif
+
     //#define LEGEND
 // ....oooOO0OOooo........oooOO0OOooo...|MAT-TYPE\...oooOO0OOooo........oooOO0OOooo......
     //#define LYSOTest // swaps scintillator material to LYSO

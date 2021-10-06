@@ -59,7 +59,7 @@ B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
     fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
     fParticleGun->SetParticleEnergy(511*keV);  
     G4ThreeVector randDir = G4RandomDirection().unit();
-    cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
+    cout << "RANDOM INIT " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
     fParticleGun->SetParticleMomentumDirection(randDir);
     #ifdef CompleteScanner
       fParticleGun2  = new G4ParticleGun(n_particle);
@@ -67,9 +67,15 @@ B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
       fParticleGun2->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
       fParticleGun2->SetParticleEnergy(511*keV); 
       G4ThreeVector randDir2 = -randDir;
-      cout << "OTHER " << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
+      cout << "OTHER INIT" << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
       fParticleGun2->SetParticleMomentumDirection(randDir2);
     #endif
+  #endif
+
+  #ifdef SensitivityScan
+  		cout << endl;
+			cout << "****USING Interaction POSITION AS DEFINED BY COMMANDLINE****: SensitivityScan" << endl;
+			cout << endl;
   #endif
 }
 
@@ -85,7 +91,7 @@ void B3PrimaryGeneratorAction::CSTtest(double E)
 {
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4ParticleDefinition* particle = particleTable->FindParticle("gamma");
-    fParticleGun = new G4ParticleGun(1);
+    // fParticleGun = new G4ParticleGun(1);
     fParticleGun->SetParticleDefinition(particle);
     fParticleGun->SetParticlePolarization(G4RandomDirection().unit());
     fParticleGun->SetParticleEnergy(E);  //visible spectrum between 400-700 nm  
@@ -95,8 +101,8 @@ void B3PrimaryGeneratorAction::RESETtest()
 {
   #ifdef MultipleStripCell
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-  G4int n_particle = 1;
-  fParticleGun  = new G4ParticleGun(n_particle);
+  // G4int n_particle = 1;
+  // fParticleGun  = new G4ParticleGun(n_particle);
   G4ParticleDefinition* particle = particleTable->FindParticle("gamma");//FindParticle("chargedgeantino");
   fParticleGun->SetParticleDefinition(particle);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
@@ -160,17 +166,31 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
     #else
     G4double y0  = (length_Y*(G4UniformRand()-0.5));
     #endif
+    #ifdef SensitivityScan
+      z0  = (G4UniformRand())*length_Z;
+      x0  = (G4UniformRand())*R_0;
+    #endif
   fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
-  G4ThreeVector randDir = G4RandomDirection().unit();
-  cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
-  fParticleGun->SetParticleMomentumDirection(randDir);
-    #ifdef CompleteScanner
+
+  #ifdef RadialSource
+    G4ThreeVector randDir = G4RandomDirection().unit();
+    cout << "RANDOM " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
+    fParticleGun->SetParticleMomentumDirection(randDir);
+    #ifndef Singles
       G4ThreeVector randDir2 = -randDir;
       cout << "OTHER " << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
       fParticleGun2->SetParticleMomentumDirection(randDir2);
-      fParticleGun2->GeneratePrimaryVertex(anEvent);
     #endif
+  #else
+    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1.,0.,0.));
+  #endif
+
+  #ifndef Singles
+    fParticleGun2->GeneratePrimaryVertex(anEvent);
+  #endif  
+
   fParticleGun->GeneratePrimaryVertex(anEvent);
+
   #endif
 
   #ifdef SingleStrip
@@ -179,7 +199,7 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
     G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
 
     #ifdef LEGEND
-      fParticleGun = new G4ParticleGun(1);
+      // fParticleGun = new G4ParticleGun(1);
       fParticleGun->SetParticleDefinition(particleTable->FindParticle("gamma"));
       fParticleGun->SetParticlePosition(G4ThreeVector(-5.14*cm,12*cm,50*cm));
       fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,-1,0));
@@ -198,7 +218,7 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
       //G4cout << "Emax " << Emax/eV << " Emin " << Emin/eV << G4endl;
       for(int i = 0; i<1000; i++)
       { 
-        fParticleGun = new G4ParticleGun(1);
+        // fParticleGun = new G4ParticleGun(1);
         fParticleGun->SetParticleDefinition(particle);
         fParticleGun->SetParticlePolarization(G4RandomDirection().unit());
         #ifdef SSRefractionTest

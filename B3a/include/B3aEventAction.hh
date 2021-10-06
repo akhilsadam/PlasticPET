@@ -68,8 +68,8 @@ class B3aEventAction : public G4UserEventAction
     G4ThreeVector GlobalToArrayXY(G4double x, G4double y, G4double z, G4int i)
     {
       double angle = i*(2*M_PI/NArray);
-      G4ThreeVector* newOrigin = new G4ThreeVector(R*cos(angle),R*sin(angle),0);
-      G4ThreeVector translatedPosition = G4ThreeVector(x,y,z) - *newOrigin;
+      G4ThreeVector origin = G4ThreeVector(R*cos(angle),R*sin(angle),0);
+      G4ThreeVector translatedPosition = G4ThreeVector(x,y,z) - origin;
       // cout << "XYZ:" << x << "|" << y << "|" << z << endl;
       // cout << "newOrigin:" << newOrigin->x() << "|" << newOrigin->y() << "|" << newOrigin->z() << endl;
       // cout << "TP:" << translatedPosition.x() << "|" << translatedPosition.y() << "|" << translatedPosition.z() << endl;

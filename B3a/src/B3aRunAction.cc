@@ -129,10 +129,10 @@ void B3aRunAction::BeginOfRunAction(const G4Run* run)
   accumulableManager->Reset();
   //histograms
   //
-  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  if ( analysisManager->IsActive() ) {
-    analysisManager->OpenFile();
-  }  
+  // G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+  // if ( analysisManager->IsActive() ) {
+  //   analysisManager->OpenFile();
+  // }  
   //inform the runManager to save random number seed
   G4RunManager::GetRunManager()->SetRandomNumberStore(false);
 
@@ -149,22 +149,22 @@ void B3aRunAction::EndOfRunAction(const G4Run* run)
   accumulableManager->Merge();
   // save histograms
 
-  G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-  if ( analysisManager->IsActive() ) {  
-    // G4double interacted = (analysisManager->GetH1(10)->bin_entries(0));
-    // G4cout << "INTERACTED " <<interacted <<G4endl;
-  //   if (IsMaster() && (interacted !=0))
-  // {
-  //   // G4int nx = 3;
-  //   // G4int ny = 16;
-  //   // G4double nStrips = 1.0*nx*ny;
-  //   // analysisManager->GetH2(6)->multiply(1.0/interacted);
-  //   // analysisManager->GetH2(12)->multiply(1.0/interacted);
-  //   // analysisManager->GetH2(13)->multiply(1.0/interacted);
-  // }
-    analysisManager->Write();    
-    analysisManager->CloseFile();
-  }    
+  // G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+  // if ( analysisManager->IsActive() ) {  
+  //   // G4double interacted = (analysisManager->GetH1(10)->bin_entries(0));
+  //   // G4cout << "INTERACTED " <<interacted <<G4endl;
+  // //   if (IsMaster() && (interacted !=0))
+  // // {
+  // //   // G4int nx = 3;
+  // //   // G4int ny = 16;
+  // //   // G4double nStrips = 1.0*nx*ny;
+  // //   // analysisManager->GetH2(6)->multiply(1.0/interacted);
+  // //   // analysisManager->GetH2(12)->multiply(1.0/interacted);
+  // //   // analysisManager->GetH2(13)->multiply(1.0/interacted);
+  // // }
+  //   analysisManager->Write();    
+  //   analysisManager->CloseFile();
+  // }    
   
 
 

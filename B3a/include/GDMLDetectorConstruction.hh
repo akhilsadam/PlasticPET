@@ -46,6 +46,8 @@
 #include <string>
 using namespace std;
 
+#include "Data.hh"
+
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
@@ -55,6 +57,8 @@ class GDMLDetectorConstruction : public DetectorConstruction
 {
   private:
 	int MPT_UPDATE;
+	const G4int n3 = 21;
+	
   public:
 	G4Material* EJ208;
 	G4Material* Vikuiti;
@@ -65,6 +69,52 @@ class GDMLDetectorConstruction : public DetectorConstruction
 
 	G4ThreeVector R0 = G4ThreeVector(R,0,0);
 	G4ThreeVector OFV = G4ThreeVector(Ox,Oy,0);
+
+	static G4double Interpolation_Calculate(G4double x, G4int bin,const vector<double>& points,const vector<double>& data)
+	{
+		//G4cout << "G4LinInterpolation is performed (2 arguments)" << G4endl;
+		G4int nBins = data.size() - 1;
+		G4double value = 0.;
+		if (x < points[0])
+			{
+			value = 0.;
+			}
+		else if (bin < nBins)
+			{
+			G4double e1 = points[bin];
+			G4double e2 = points[bin+1];
+			G4double d1 = data[bin];
+			G4double d2 = data[bin+1];
+			value = d1 + (d2 - d1)*(x - e1)/(e2 - e1);
+			}
+		else
+			{
+			value = data[nBins];
+			}
+		return value;
+	}
+	static G4double Interpolate(G4double x,const vector<double>& points, const vector<double>& data)
+	{
+		int bin = -1;
+		for(auto p : points)
+		{
+			if(x<p)
+			{
+				break;
+			}
+			bin++;
+		}
+		return Interpolation_Calculate(x, bin, points, data);
+	}
+	static bool sipmQE_Hit(G4double wavelength)
+	{
+		G4double p = Interpolate(wavelength,sipm_QE_lambda,sipm_QE) * 0.01; //probability
+		if (G4UniformRand() > p)
+		{
+			return false;
+		}
+		return true;
+	}
 
 	G4ThreeVector* GetPosition(int nVertex, string name, G4GDMLParser* parser)
 	{
@@ -344,28 +394,31 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	#else
 		EJ208 = PVT;
 	#endif
+
 //----------------------------------------------------------------------MAT TABLES------------------------------------------------////
-	const G4int n = 6;
-	const G4int n2 = 10;
-	G4double PhotonEnergy[n] = {3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV}; //visible spectrum (400,420,435,460,480,520)nm
-	G4double TPBPhotonEnergy[n2] = {12.3985*eV,6.19926*eV,4.1328*eV,3.5424*eV,3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV};//visible spectrum (100,200,300,350,400,420,435,460,480,520)nm
+const G4int n = 6;
+const G4int n2 = 10;
+G4double PhotonEnergy[n] = {3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV}; //visible spectrum (400,420,435,460,480,520)nm
+G4double TPBPhotonEnergy[n2] = {12.3985*eV,6.19926*eV,4.1328*eV,3.5424*eV,3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV};//visible spectrum (100,200,300,350,400,420,435,460,480,520)nm
 
-	G4double refractive_index_vk[n] = {1.6,1.6,1.6,1.6,1.6,1.6};
-	G4double att_length_vk[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
+G4double refractive_index_vk[n] = {1.6,1.6,1.6,1.6,1.6,1.6};
+G4double att_length_vk[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
 
-	G4double refractive_index_ej[n] = {1.58,1.58,1.58,1.58,1.58,1.58};
-	G4double att_length_ej[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
+G4double refractive_index_ej[n] = {1.58,1.58,1.58,1.58,1.58,1.58};
+G4double att_length_ej[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
 
-	//Spectroscopic and travelling-wave lasing characterisation of tetraphenylbenzidine and di-naphtalenyl-diphenylbenzidine
-	//Measurements of the intrinsic quantum efficiency and absorption length of tetraphenyl butadiene thin films in the vacuum ultraviolet regime
-	G4double refractive_index_tpb[n2] = {1.67,1.67,2.2,1.79,1.9,1.8,1.8,1.79,1.75,1.72};// the following values are preliminary from articles above - needs updating!
-	G4double att_length_tpb[n2] = {100*nm,100*nm,100*nm,31.6*nm,2000*nm,10000*nm,20000*nm,1*mm,1*mm,1*mm};
-	G4double ray_length_tpb[n2] = {10*m,10*m,10*m,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um};
-	G4double em_tpb[n2] = {0,0,0,0,0.00665,0.013,0.012,0.008,0.004,0.002};
-	normalize(em_tpb,n2);
-	G4double tc_tpb = 3*ns;
-	G4double reflectivity_tpb[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
-	G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
+//Spectroscopic and travelling-wave lasing characterisation of tetraphenylbenzidine and di-naphtalenyl-diphenylbenzidine
+//Measurements of the intrinsic quantum efficiency and absorption length of tetraphenyl butadiene thin films in the vacuum ultraviolet regime
+G4double refractive_index_tpb[n2] = {1.67,1.67,2.2,1.79,1.9,1.8,1.8,1.79,1.75,1.72};// the following values are preliminary from articles above - needs updating!
+G4double att_length_tpb[n2] = {100*nm,100*nm,100*nm,31.6*nm,2000*nm,10000*nm,20000*nm,1*mm,1*mm,1*mm};
+G4double ray_length_tpb[n2] = {10*m,10*m,10*m,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um,2.75*um};
+G4double em_tpb[n2] = {0,0,0,0,0.00665,0.013,0.012,0.008,0.004,0.002};
+normalize(em_tpb,n2);
+G4double tc_tpb = 3*ns;
+G4double reflectivity_tpb[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
+G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
+
+//----------------------------------------------------------------------MAT TABLES------------------------------------------------////
 //----------------------------------------------------------------------ATT READIN------------------------------------------------////
 	vector<G4double> att_length_ejRV(begin(att_length_ej), end(att_length_ej));
 	vector<G4double> PhotonEnergyRV(begin(PhotonEnergy), end(PhotonEnergy));
@@ -447,6 +500,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 	memcpy( PhotonEnergyR, &PhotonEnergyRV[0], sizeof(double) * PhotonEnergyRV.size() );
 	memcpy( rayScr_length_pvtR, &rayScr_length_pvtRV[0], sizeof(double) * rayScr_length_pvtRV.size() );
 	memcpy( NPhotonEnergyR, &NPhotonEnergyRV[0], sizeof(double) * NPhotonEnergyRV.size() );	
+	
 //----------------------------------------------------------------------MAT TABLES------------------------------------------------////
 	G4double refractive_index_air[n] = {1.00029,1.00029,1.00029,1.00029,1.00029,1.00029};
 

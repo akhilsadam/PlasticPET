@@ -230,15 +230,19 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 			//if(creatorName != "Scintillation")
 			//G4cout << creatorName << G4endl;
 			G4int trackid = ptrG4Track->GetTrackID();
-			if(count(fEventAction->photonIDList.begin(),fEventAction->photonIDList.end(),trackid))
-			{
-				//G4cout << "photonIDList ERROR" << G4endl;
+			#ifndef MakeThreadSafeFast
+				if(count(fEventAction->photonIDList.begin(),fEventAction->photonIDList.end(),trackid))
+				{
+					G4cout << "photonIDList ERROR" << G4endl;
+					//fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
+				}
+				else
+				{
+					fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
+				}
+			#else
 				fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
-			}
-			else
-			{
-				fEventAction->photonIDList.push_back(ptrG4Track->GetTrackID());
-			}
+			#endif
 
 
 			//G4cout << "Filled Photon Deposition" << G4endl;
@@ -432,15 +436,17 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 						{
 							cout << pid <<" "<<fEventAction->detPhotonIDList[fEventAction->detPhotonIDList.size()-1]<< endl;
 						}*/
-						for(int i =fEventAction->detPhotonIDList.size()-1;i>=0;i--)
-						{
-							if(fEventAction->detPhotonIDList[i] == pid)
+						#ifndef MakeThreadSafeFast
+							for(int i =fEventAction->detPhotonIDList.size()-1;i>=0;i--)
 							{
-								cout << "!!" << endl;
-								notInList =  -1;
-								break;
+								if(fEventAction->detPhotonIDList[i] == pid)
+								{
+									cout << "!!" << endl;
+									notInList =  -1;
+									break;
+								}
 							}
-						}
+						#endif
 						/*if(find(fEventAction->detPhotonIDList.begin(),fEventAction->detPhotonIDList.end(),pid)== fEventAction->detPhotonIDList.end())
 						{
 							notInList =  2;
@@ -551,27 +557,38 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 						
 							if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
 							{
+								#ifndef MakeThreadSafeFast
 								if ((notInList>1) && ((vol.find(detectorLeftName) != std::string::npos) || (vol.find(detectorRightName) != std::string::npos)))
+								#else
+								if (((vol.find(detectorLeftName) != std::string::npos) || (vol.find(detectorRightName) != std::string::npos)))
+								#endif
 								{
 									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-									fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
-									fEventAction->detPhotonIDList.push_back(pid);
-									fEventAction->detectedPosition[pid] = {x,y,z};
-									if(vol.find(detectorRightName) == std::string::npos)
+									#ifdef QuantumEfficiency
+									if (GDMLDetectorConstruction::sipmQE_Hit(lambdaP))
 									{
-										//analysisManager->FillH2(2, xyzS.x(),xyzS.y(), 1);
-										//analysisManager->FillH2(4, xyzS.x(),xyzS.y(), 1);
-										//analysisManager->FillH1(17,  lambdaP, 1);
-										fEventAction->fillL(xyzS.x(),xyzS.y(),detA);
-										//cout << vol << endl;
-									}
-									else
-									{
-										//analysisManager->FillH2(3, xyzS.x(),xyzS.y(), 1);
-										//analysisManager->FillH2(5, xyzS.x(),xyzS.y(), 1);
-										//analysisManager->FillH1(18,  lambdaP, 1);	
-										fEventAction->fillR(xyzS.x(),xyzS.y(),detA);
-									}		
+									#endif
+										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
+										fEventAction->detPhotonIDList.push_back(pid);
+										fEventAction->detectedPosition[pid] = {x,y,z};
+										if(vol.find(detectorRightName) == std::string::npos)
+										{
+											//analysisManager->FillH2(2, xyzS.x(),xyzS.y(), 1);
+											//analysisManager->FillH2(4, xyzS.x(),xyzS.y(), 1);
+											//analysisManager->FillH1(17,  lambdaP, 1);
+											fEventAction->fillL(xyzS.x(),xyzS.y(),detA);
+											//cout << vol << endl;
+										}
+										else
+										{
+											//analysisManager->FillH2(3, xyzS.x(),xyzS.y(), 1);
+											//analysisManager->FillH2(5, xyzS.x(),xyzS.y(), 1);
+											//analysisManager->FillH1(18,  lambdaP, 1);	
+											fEventAction->fillR(xyzS.x(),xyzS.y(),detA);
+										}	
+									#ifdef QuantumEfficiency
+									}	
+									#endif
 								}	
 							}
 						#endif	
