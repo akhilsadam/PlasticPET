@@ -57,7 +57,7 @@ B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
     G4ParticleDefinition* particle = particleTable->FindParticle("gamma");//FindParticle("chargedgeantino");
     fParticleGun->SetParticleDefinition(particle);
     fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
-    fParticleGun->SetParticleEnergy(511*keV);  
+    fParticleGun->SetParticleEnergy(y_Energy);  
     G4ThreeVector randDir = G4RandomDirection().unit();
     cout << "RANDOM INIT " << randDir.x() << "|" << randDir.y() << "|" << randDir.z() << endl;
     fParticleGun->SetParticleMomentumDirection(randDir);
@@ -65,7 +65,7 @@ B3PrimaryGeneratorAction::B3PrimaryGeneratorAction()
       fParticleGun2  = new G4ParticleGun(n_particle);
       fParticleGun2->SetParticleDefinition(particle);
       fParticleGun2->SetParticlePosition(G4ThreeVector(0.,0.,length_Z/2));
-      fParticleGun2->SetParticleEnergy(511*keV); 
+      fParticleGun2->SetParticleEnergy(y_Energy); 
       G4ThreeVector randDir2 = -randDir;
       cout << "OTHER INIT" << randDir2.x() << "|" << randDir2.y() << "|" << randDir2.z() << endl;
       fParticleGun2->SetParticleMomentumDirection(randDir2);
@@ -106,7 +106,7 @@ void B3PrimaryGeneratorAction::RESETtest()
   G4ParticleDefinition* particle = particleTable->FindParticle("gamma");//FindParticle("chargedgeantino");
   fParticleGun->SetParticleDefinition(particle);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
-  fParticleGun->SetParticleEnergy(511*keV);  //SetParticleEnergy(1*eV); between 70-250 MeV   
+  fParticleGun->SetParticleEnergy(y_Energy);  //SetParticleEnergy(1*eV); between 70-250 MeV   
   #ifndef RadialSource
     fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1,0,0));
   #else

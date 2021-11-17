@@ -70,6 +70,12 @@ const double  att_len = 400*cm;
 //     #define SensitivityScan
 // #endif
 
+#ifndef GammaEnergy
+    const double y_Energy = 511*keV;
+#else
+    const double y_Energy = GammaEnergy*keV;
+#endif
+
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
     #define G4MULTITHREADED
