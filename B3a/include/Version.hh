@@ -90,9 +90,16 @@ const double  att_len = 400*cm;
     //#define SSReflectionTest // reflection test - needs SingleStrip define and ScintillationDisable
     //#define SSRefractionTest // refraction test - needs SingleStrip define and ScintillationDisable (NOT ReflectionDisable)
     #define CrossSectionTest // prints default cross sections! MAKE SURE THIS IS ENABLED! unless using PVT MPT
+        #define recalculateCrossSections // calculates default cross sections. This must be enabled if build directory does not have a 
 
     //#define ReflectionTracking // saves data on photon reflections/absorptions
     //#define ElectronPathLength // saves data on electron mean displacement and path length -- needs thread locking!
+
+    #define HumanoidPhantom // make sure to disable the recalculation of cross sections (recalculateCrossSections)
+    #ifdef HumanoidPhantom
+        #undef recalculateCrossSections
+        #define ICRPModel
+    #endif
 
     #ifdef SingleArrayTest
         #define Singles

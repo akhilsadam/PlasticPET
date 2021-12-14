@@ -39,7 +39,7 @@
 
 #include "B3aHistoManager.hh"
 //#include "B3DetectorConstruction.hh"
-#include "GDMLDetectorConstruction.hh"
+#include "DetectorConstruction.hh"
 
 #ifdef CrossSectionTest
 	#include "G4ProcessManager.hh"
@@ -59,7 +59,7 @@ RunTools* B3aRunAction::RunTool = NULL;
 int RunTools::currentEventNumber = 0;
 int RunTools::totalEvents = 0;
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-B3aRunAction::B3aRunAction(G4VUserDetectorConstruction* patient, B3PrimaryGeneratorAction* kin)
+B3aRunAction::B3aRunAction(DetectorConstruction* patient, B3PrimaryGeneratorAction* kin)
  : G4UserRunAction(),
    fGoodEvents(0),
    fSumDose(0.),
@@ -103,13 +103,15 @@ void B3aRunAction::BeginOfRunAction(const G4Run* run)
   	std::lock(foo21,barL21);
     if(!CrossSectionTrue)
     {
-    	CrossSectionTester* cst = new CrossSectionTester();
-    	cst->CSRunAction(run, (GDMLDetectorConstruction*) fpatient, fPrimary);
-      G4cout << "### CROSS SECTIONS CREATED " << CrossSectionTrue << G4endl;
-      G4cout << "### UPDATING MPT ..." << G4endl;
-      ((GDMLDetectorConstruction*) fpatient)->UPDATE_GEO_MPT();
-      G4cout << "### MPT UPDATED" << G4endl;
-      CrossSectionTrue = true;
+        #ifdef recalculateCrossSections
+    	    CrossSectionTester* cst = new CrossSectionTester();
+    	    cst->CSRunAction(run, fpatient, fPrimary);
+            G4cout << "### NEW CROSS SECTIONS CREATED " << CrossSectionTrue << G4endl;
+        #endif
+        G4cout << "### UPDATING MPT ..." << G4endl;
+        fpatient->UPDATE_GEO_MPT();
+        G4cout << "### MPT UPDATED" << G4endl;
+        CrossSectionTrue = true;
     }
     foo21.unlock();
 		barL21.unlock();
@@ -202,11 +204,12 @@ void B3aRunAction::EndOfRunAction(const G4Run* run)
       #endif
     #endif
     #ifdef MultipleStripCell
-    G4cout
-     << G4endl
-     << "--------------------End of Global Run------------------------"
-     << G4endl
-     << "  The run was " << nofEvents << " "<< partName;
+        G4cout
+            << G4endl
+            << "--------------------End of Global Run------------------------"
+            << G4endl
+            << "  The run was " << nofEvents << " " << partName << G4endl
+            << " Detector : " << fpatient->name << " with " << fpatient->GetWorld()->GetLogicalVolume()->GetNoDaughters() << " daughters" << G4endl;
     #endif
 
     /*G4int nDy = 103;
@@ -238,11 +241,11 @@ void B3aRunAction::EndOfRunAction(const G4Run* run)
       #endif
     #endif
     #ifdef MultipleStripCell
-    G4cout
-     << G4endl
-     << "--------------------End of Local Run------------------------"
-     << G4endl
-     << "  The run was " << nofEvents << " "<< partName;
+        G4cout
+            << G4endl
+            << "--------------------End of Local Run------------------------"
+            << G4endl
+            << "  The run was " << nofEvents << " " << partName;
     #endif
   }      
   /*G4cout

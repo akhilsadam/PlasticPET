@@ -38,15 +38,14 @@
 #include "RunTools.hh"
 
 class HistoManager;
-class G4VUserDetectorConstruction;
-class GDMLDetectorConstruction;
+class DetectorConstruction;
 class B3PrimaryGeneratorAction;
 /// Run action class
 
 class B3aRunAction : public G4UserRunAction
 {
   public:
-    B3aRunAction(G4VUserDetectorConstruction* patient,B3PrimaryGeneratorAction* kin);
+    B3aRunAction(DetectorConstruction* patient,B3PrimaryGeneratorAction* kin);
     ~B3aRunAction();
     
     virtual void BeginOfRunAction(const G4Run*);
@@ -62,7 +61,7 @@ private:
     G4Accumulable<G4int>    fGoodEvents;
     G4Accumulable<G4double> fSumDose;  
     HistoManager* fHistoManager;
-    G4VUserDetectorConstruction* fpatient;
+    DetectorConstruction* fpatient;
     B3PrimaryGeneratorAction* fPrimary;
     static bool CrossSectionTrue;
     static RunTools* RunTool;

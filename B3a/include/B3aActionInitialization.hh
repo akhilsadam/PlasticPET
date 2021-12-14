@@ -36,20 +36,20 @@
 /// Action initialization class.
 ///
 
-class G4VUserDetectorConstruction;
+class DetectorConstruction;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class B3aActionInitialization : public G4VUserActionInitialization
 {
   public:
-    B3aActionInitialization(G4VUserDetectorConstruction* detector);
+    B3aActionInitialization(DetectorConstruction* detector);
     virtual ~B3aActionInitialization();
 
     virtual void BuildForMaster() const;
     virtual void Build() const;
   private:
-    	G4VUserDetectorConstruction* fDetector;
+    	DetectorConstruction* fDetector;
 
 };
 

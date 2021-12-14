@@ -39,10 +39,11 @@
 #include "G4UserSteppingAction.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
-#include "vector"
+#include <vector>
+#include <array>
 
 class B3aEventAction;
-class G4VUserDetectorConstruction;
+class DetectorConstruction;
 using namespace std;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
@@ -50,14 +51,14 @@ using namespace std;
 class B3SteppingAction : public G4UserSteppingAction
 {
   public:
-    B3SteppingAction(B3aEventAction*,G4VUserDetectorConstruction*);
+    B3SteppingAction(B3aEventAction*,DetectorConstruction*);
    ~B3SteppingAction();
     static G4int id;
     virtual void UserSteppingAction(const G4Step*);
     const vector<string> statusEnum = {"Undefined","FresnelRefraction","FresnelReflection","TotalInternalReflection","LambertianReflection","LobeReflection","SpikeReflection","BackScattering","Absorption","Detection","NotAtBoundary","SameMaterial","StepTooSmall","NoRINDEX","PolishedLumirrorAirReflection","PolishedLumirrorGlueReflection","PolishedAirReflection","PolishedTeflonAirReflection","PolishedTiOAirReflection","PolishedTyvekAirReflection","PolishedVM2000AirReflection","PolishedVM2000GlueReflection","EtchedLumirrorAirReflection","EtchedLumirrorGlueReflection","EtchedAirReflection","EtchedTeflonAirReflection","EtchedTiOAirReflection","EtchedTyvekAirReflection","EtchedVM2000AirReflection","EtchedVM2000GlueReflection","GroundLumirrorAirReflection","GroundLumirrorGlueReflection","GroundAirReflection","GroundTeflonAirReflection","GroundTiOAirReflection","GroundTyvekAirReflection","GroundVM2000AirReflection","GroundVM2000GlueReflection","Dichroic"};
     private:
     B3aEventAction* fEventAction;
-    G4VUserDetectorConstruction* fpatient;
+    DetectorConstruction* fpatient;
     
 };
 

@@ -38,21 +38,21 @@
 
 #include "g4root.hh"
 //#include "g4xml.hh"
-class G4VUserDetectorConstruction;
+class DetectorConstruction;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class HistoManager
 {
   public:
-    HistoManager(G4VUserDetectorConstruction* patient);
+    HistoManager(DetectorConstruction* patient);
    ~HistoManager();
     G4double stepMaxV;
 
   private:
     void Book();
     G4String fFileName;
-    G4VUserDetectorConstruction* fpatient;
+    DetectorConstruction* fpatient;
     
 };
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

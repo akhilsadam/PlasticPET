@@ -37,6 +37,7 @@
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 #include <vector>
+#include <array>
 #include "G4ThreeVector.hh"
 using namespace std;
 

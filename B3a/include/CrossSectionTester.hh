@@ -1,5 +1,5 @@
 #include "B3aRunAction.hh"
-#include "GDMLDetectorConstruction.hh"
+#include "DetectorConstruction.hh"
 #include "B3PrimaryGeneratorAction.hh"
 #include "B3aHistoManager.hh"
 
@@ -29,13 +29,13 @@ class CrossSectionTester
  G4double  fRangeCut[3];
  G4double fEnergyCut[3];
  const G4Run* aRun;
- GDMLDetectorConstruction* aDetector;
+ DetectorConstruction* aDetector;
  B3PrimaryGeneratorAction* aPrimary;
  double energyP;
  G4AnalysisManager* analysisManager;
 string fileOutputName = "lambdas5.txt";
 char* fileOutputNameC;
-public: void CSRunAction(const G4Run* runI,GDMLDetectorConstruction* fDetectorI,B3PrimaryGeneratorAction* fPrimaryI)
+public: void CSRunAction(const G4Run* runI,DetectorConstruction* fDetectorI,B3PrimaryGeneratorAction* fPrimaryI)
 {
   //Clearing crossSection file
     fileOutputNameC = &fileOutputName[0];
@@ -260,24 +260,24 @@ void CSRun()//void RunAction::BeginOfRunAction(const G4Run*)
     double out = lambda / g * cm *cm;
     myfile5 << out << " ";                    
     //G4cout << "\t" << std::setw(13) << G4BestUnit( lambda, "Mass/Surface"); 
-        G4double barns = ((1.0/out)*1.023*pow(10,3)/(6.022*19));
-    if(j==0)
-	{
-		analysisManager->FillH1(20,energyP, barns); //photoE
-    //myfileb << energyP << " " << barns << std::endl;    
-	}
-	else if(j==1)
-	{
-		analysisManager->FillH1(21,energyP, barns);
-	}
-	else if(j==3)
-	{
-		analysisManager->FillH1(22,energyP, barns);
-	}
-	else if(j==4)
-	{
-		analysisManager->FillH1(19,energyP, barns);
-	}   
+ //       G4double barns = ((1.0/out)*1.023*pow(10,3)/(6.022*19));
+ //   if(j==0)
+	//{
+	//	analysisManager->FillH1(20,energyP, barns); //photoE
+ //   //myfileb << energyP << " " << barns << std::endl;    
+	//}
+	//else if(j==1)
+	//{
+	//	analysisManager->FillH1(21,energyP, barns);
+	//}
+	//else if(j==3)
+	//{
+	//	analysisManager->FillH1(22,energyP, barns);
+	//}
+	//else if(j==4)
+	//{
+	//	analysisManager->FillH1(19,energyP, barns);
+	//}   
   }
   myfile5 << std::endl;
   myfile5.close(); 

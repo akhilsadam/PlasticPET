@@ -34,12 +34,12 @@
 #include "B3StackingAction.hh"
 #include "B3SteppingAction.hh"
 //#include "B3DetectorConstruction.hh"
-#include "GDMLDetectorConstruction.hh"
+#include "DetectorConstruction.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 B3PrimaryGeneratorAction* fprimaryGen; 
 
-B3aActionInitialization::B3aActionInitialization(G4VUserDetectorConstruction* detector)
+B3aActionInitialization::B3aActionInitialization(DetectorConstruction* detector)
  : G4VUserActionInitialization(),fDetector(detector)
 {
   fprimaryGen = new B3PrimaryGeneratorAction();

@@ -24,6 +24,8 @@ set(CMAKE_CXX "g++")
 set(CMAKE_CXX_FLAGS "-g -std=c++17 -O0 -w") #turn off -w to see warnings
 include(${Geant4_USE_FILE})
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/includePhantom)
+include_directories(${PROJECT_SOURCE_DIR}/includeICRP)
 include_directories(${PROJECT_SOURCE_DIR}/cnpy_master)
 include_directories(/home/mitt-unix/Desktop/Geant4/geant4-10.6.0/source/persistency/gdml/include)
 
@@ -31,8 +33,10 @@ include_directories(/home/mitt-unix/Desktop/Geant4/geant4-10.6.0/source/persiste
 # Locate sources and headers for this project
 # NB: headers are included so they will show up in IDEs
 #
-file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
+file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/srcPhantom/*.cc ${PROJECT_SOURCE_DIR}/srcICRP/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
+file(GLOB headers ${PROJECT_SOURCE_DIR}/includePhantom/*.hh)
+file(GLOB headers ${PROJECT_SOURCE_DIR}/includeICRP/*.hh)
 file(GLOB headers /usr/local/xerces/include/*.hh)
 
 #----------------------------------------------------------------------------
@@ -65,6 +69,19 @@ foreach(_script ${EXAMPLEB3_SCRIPTS})
     COPYONLY
     )
 endforeach()
+
+### For ICRP Phantoms ### ------------------------
+
+include(ExternalProject)
+ExternalProject_Add(ICRPdata
+  SOURCE_DIR ${PROJECT_BINARY_DIR}/ICRPdata
+  URL https://cern.ch/geant4-data/datasets/examples/advanced/ICRP110Phantoms/ICRPdata.tar.gz
+  URL_MD5 2aba5409d4e7b7a2f0328e7d3402f187
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  )
+
 
 #----------------------------------------------------------------------------
 # For internal Geant4 use - but has no effect if you build this

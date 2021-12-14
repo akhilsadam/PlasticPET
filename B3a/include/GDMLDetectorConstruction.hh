@@ -48,6 +48,14 @@ using namespace std;
 
 #include "Data.hh"
 
+//#ifdef HumanoidPhantom
+//	#ifndef ICRPModel
+//		#include "G4HumanPhantomConstruction.hh"
+//	#else
+//		#include "ICRP110PhantomConstruction.hh"
+//	#endif
+//#endif
+
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
@@ -55,282 +63,13 @@ class G4LogicalVolume;
 //#include "B3DetectorConstruction.hh"
 class GDMLDetectorConstruction : public DetectorConstruction
 {
-  private:
-	int MPT_UPDATE;
-	const G4int n3 = 21;
 	
   public:
-	G4Material* EJ208;
 	G4Material* Vikuiti;
 	G4Material* Air;
 	G4Material* TPB;
 	G4Material* detMAT;
-	double rho_pvt = 1.023*g/cm3;
-
-	G4ThreeVector R0 = G4ThreeVector(R,0,0);
-	G4ThreeVector OFV = G4ThreeVector(Ox,Oy,0);
-
-	static G4double Interpolation_Calculate(G4double x, G4int bin,const vector<double>& points,const vector<double>& data)
-	{
-		//G4cout << "G4LinInterpolation is performed (2 arguments)" << G4endl;
-		G4int nBins = data.size() - 1;
-		G4double value = 0.;
-		if (x < points[0])
-			{
-			value = 0.;
-			}
-		else if (bin < nBins)
-			{
-			G4double e1 = points[bin];
-			G4double e2 = points[bin+1];
-			G4double d1 = data[bin];
-			G4double d2 = data[bin+1];
-			value = d1 + (d2 - d1)*(x - e1)/(e2 - e1);
-			}
-		else
-			{
-			value = data[nBins];
-			}
-		return value;
-	}
-	static G4double Interpolate(G4double x,const vector<double>& points, const vector<double>& data)
-	{
-		int bin = -1;
-		for(auto p : points)
-		{
-			if(x<p)
-			{
-				break;
-			}
-			bin++;
-		}
-		return Interpolation_Calculate(x, bin, points, data);
-	}
-	static bool sipmQE_Hit(G4double wavelength)
-	{
-		G4double p = Interpolate(wavelength,sipm_QE_lambda,sipm_QE) * 0.01; //probability
-		if (G4UniformRand() > p)
-		{
-			return false;
-		}
-		return true;
-	}
-
-	G4ThreeVector* GetPosition(int nVertex, string name, G4GDMLParser* parser)
-	{
-		double x = 0;
-		double y = 0;
-		double z = 0;
-		for(int j=0;j<nVertex;j++)
-		{
-			name = name+"_v"+to_string(j);
-			G4ThreeVector parsedPosition = parser->GetPosition(name);
-			x = x + (parsedPosition.x()/nVertex);
-			y = y + (parsedPosition.y()/nVertex);
-			z = z + (parsedPosition.z()/nVertex);
-		}
-		return new G4ThreeVector(x,y,z);
-	}
-	G4ThreeVector GetOrigin(vector<G4ThreeVector>& positions)
-	{	
-		double x = 0;
-		double y = 0;
-		double z = 0;
-		double nVertex = positions.size();
-		for(int i=0; i<nVertex;i++)
-		{
-			G4ThreeVector position = positions[i];
-			x = x + (double) (position.x()/nVertex);
-			y = y + (double) (position.y()/nVertex);
-			z = z + (double) (position.z()/nVertex);
-			//cout << x << y << z << endl;
-		}
-		return G4ThreeVector(-x,-y,-z);
-	}
-	G4ThreeVector* Rotate(int i)
-	{
-		double xy = sqrt(pow(R0.x(),2)+pow(R0.y(),2));
-		double angle = i*(2*M_PI/NArray)+atan2(R0.y(),R0.x());
-		return new G4ThreeVector(xy*cos(angle),xy*sin(angle),R0.z());
-	}
-	G4int copyNumber(G4int i)
-	{
-		return (NAssemblyElements+1)*i + copyNumberOffset;
-	}
-	void UPDATE_GEO_MPT()
-	{
-		MPT_UPDATE = 1;
-		G4RunManager* runManager = G4RunManager::GetRunManager();
-		// Open geometry for the physical volume to be modified ...
-		G4GeometryManager* geo = G4GeometryManager::GetInstance();
-		geo->OpenGeometry(World);
-		// Modify dimension of the solid ...
-		//
-		//World->GetLogicalVolume()->ClearDaughters();
-		//World->GetLogicalVolume()->Clean();
-		//Parser->Clear();
-		//Parser->Read("gdml.gdml",false);
-		//World = Parser->GetWorldVolume();
-		//WorldBuild((*Parser), World);
-		WorldMod();
-		
-		// Close geometry for the portion modified ...
-		//
-		geo->CloseGeometry(World);
-		G4VVisManager* visManager = G4VVisManager::GetConcreteInstance();
-		visManager->GeometryHasChanged();
-		runManager->PhysicsHasBeenModified();
-		runManager->GeometryHasBeenModified();
-		//runManager->ReinitializeGeometry(true);		
-		//EJ208->GetMaterialPropertiesTable()->DumpTable();
-		//Vikuiti->GetMaterialPropertiesTable()->DumpTable();
-		//Air->GetMaterialPropertiesTable()->DumpTable();
-	}
-	G4double length (G4double v[],int size) {
-		G4double len = 0;
-		for(int i =0;i<size;i++)
-		{
-			len+=(v[i]);
-		}
-		return len;
-   	}
-	void normalize (G4double v[],int size) {
-		G4double len = length(v,size);
-		for(int i =0;i<size;i++)
-		{
-			v[i]=v[i]/len;
-		}
-   	}
-   	vector<string> split (const string &s, char delim) {
-    	vector<string> result;
-    	stringstream ss (s);
-    	string item;
-    	while (getline (ss, item, delim)) {
-        	result.push_back (item);
-    	}
-   		return result;
-   	}
-	void WorldMod()
-	{
-		G4cout << "--//-------------------------------------------WORLDMODDING-------------------------------------------//--" << G4endl;
-
-			//if visible, (3.105*eV to 1.774*eV), Att length = 400NM! - override.
-		//----------------------------------------------------------------------ATT READIN------------------------------------------------////
-			vector<G4double> att_length_ejRV= *new vector<G4double>();
-			vector<G4double> PhotonEnergyRV= *new vector<G4double>();
-			vector<G4double> NPhotonEnergyRV = *new vector<G4double>();
-			vector<G4double> rayScr_length_pvtRV = *new vector<G4double>();
-			string line;
-			int sz0 = 0;
-			char delm = '|';
-			string fn ="";
-			if(MPT_UPDATE<0)
-			{
-				fn = "PVT.txt";
-			}
-			else
-			{
-				fn = "lambdas5.txt";
-				delm = ' ';
-			}
-			ifstream myfile(fn);
-			G4cout << "OPENING PVT FILE -----------";
-			if (myfile.is_open())
-			{
-				if(MPT_UPDATE<0)
-				{
-					getline (myfile,line);
-					getline (myfile,line);
-					getline (myfile,line);
-				}
-				G4cout << G4endl;
-				while ( getline (myfile,line) )
-				{
-					G4double en = 0;
-					G4double rayScr_CS = 0;
-					G4double att_CS = 0;
-					G4double rS_l = 0;
-					G4double att_l = 0;
-					vector<string> val = split(line,delm);
-					if(MPT_UPDATE<0)
-					{
-						en = G4double(stod(val[0]));
-						PhotonEnergyRV.push_back(en);
-						NPhotonEnergyRV.push_back(en);
-						rayScr_CS = G4double(stod(val[1]))*cm2/g;
-						att_CS = G4double(stod(val[4]))*cm2/g;
-						rS_l = 1/(rho_pvt*rayScr_CS);
-						att_l = 1/(rho_pvt*att_CS);
-						G4cout << "1ST SET" << G4endl;
-					}
-					else
-					{
-						en = G4double(stod(val[0]))*MeV;
-						//G4cout << val.size() << " " << en << G4endl; //size
-						PhotonEnergyRV.push_back(en);
-						NPhotonEnergyRV.push_back(en);
-						rayScr_CS = G4double(stod(val[4]))*g/cm2; //
-						att_CS = G4double(stod(val[5]))*g/cm2;
-						rS_l = rayScr_CS/(rho_pvt);
-						att_l = att_CS/(rho_pvt);
-						//G4cout << "2nd SET" << G4endl;
-						if((en<(3.105*eV)) && (en>(1.774*eV)))
-						{
-							att_l = 400*cm;
-							//G4cout << "MODIFIED OPTICAL ATTENUATION." << G4endl;
-						}
-						
-
-					}
-								
-					rayScr_length_pvtRV.push_back(rS_l);
-					att_length_ejRV.push_back(att_l);
-					//G4cout << "values  : " << val[0] << " "<<rS_l/cm<<" "<<att_l/cm<<G4endl;
-					sz0+=1;
-				}
-				myfile.close();
-				G4cout << "opened file" << G4endl;
-			}
-			else {G4cout << "Unable to open file" << G4endl; exit(3);}
-
-			G4double att_length_ejR[sz0];
-			G4double PhotonEnergyR[sz0];
-			G4double rayScr_length_pvtR[sz0];
-			G4double NPhotonEnergyR[sz0];
-			memcpy( att_length_ejR, &att_length_ejRV[0], sizeof(double) * att_length_ejRV.size() );
-			memcpy( PhotonEnergyR, &PhotonEnergyRV[0], sizeof(double) * PhotonEnergyRV.size() );
-			memcpy( rayScr_length_pvtR, &rayScr_length_pvtRV[0], sizeof(double) * rayScr_length_pvtRV.size() );
-			memcpy( NPhotonEnergyR, &NPhotonEnergyRV[0], sizeof(double) * NPhotonEnergyRV.size() );
-		//----------------------------------------------------------------------RED MAT----------------------------------------------------////
-			EJ208->GetMaterialPropertiesTable()->RemoveProperty("ABSLENGTH");
-			EJ208->GetMaterialPropertiesTable()->RemoveProperty("RAYLEIGH");
-			EJ208->GetMaterialPropertiesTable()->AddProperty("ABSLENGTH",PhotonEnergyR,att_length_ejR,sz0);// MODIFIED WITH DATA
-			EJ208->GetMaterialPropertiesTable()->AddProperty("RAYLEIGH",PhotonEnergyR,rayScr_length_pvtR,sz0);// MODIFIED WITH DATA
-		//G4NistManager* man = G4NistManager::Instance();
-		for(int i = 0; i< World->GetLogicalVolume()->GetNoDaughters(); i++)
-		{
-			G4VPhysicalVolume* V = World->GetLogicalVolume()->GetDaughter(i);
-			if(V!=NULL)
-			{
-				string name = V->GetName();
-				#ifdef SingleStrip
-				string name0 = "EJ208(1)";
-				#else
-				string name0 = "EJ208";
-				#endif
-				if(name.find(name0) != std::string::npos)
-				{
-					//V->GetLogicalVolume()->SetMaterial(man->FindMaterial("G4_AIR"));
-					V->GetLogicalVolume()->SetMaterial(EJ208);
-
-					#ifdef SingleStrip
-					G4cout <<"updated EJ208!" <<G4endl;
-					#endif
-				}
-			}
-		}
-		//World->GetLogicalVolume()->GetDaughter(0)->GetLogicalVolume()->GetMaterial()->GetMaterialPropertiesTable()->DumpTable();
-	}
+	
 	void WorldBuild(G4GDMLParser& parser, G4VPhysicalVolume *setWorld )
    {
 	   G4cout << "--//-------------------------------------------WORLDBUILDING-------------------------------------------//--" << G4endl;
@@ -392,6 +131,7 @@ class GDMLDetectorConstruction : public DetectorConstruction
 		EJ208->AddMaterial(PVT,95*perCent);
 		EJ208->AddMaterial(LeadM,5*perCent);
 	#else
+		delete EJ208;
 		EJ208 = PVT;
 	#endif
 
@@ -987,7 +727,7 @@ G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
      	#ifndef SSRefractionTest
 		World = setWorld;
 		#endif
-	
+		name = "newWorld";
 	//--------------
 		MPT_UPDATE = -1;
 		//WorldBuild(parser, setWorld);
@@ -996,6 +736,7 @@ G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
    G4VPhysicalVolume *Construct()
    {
 	 WorldBuild((*Parser), World);
+	 name = "Constructed";
      return World;
    }
 
@@ -1022,19 +763,13 @@ G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
 		////SetSensitiveDetector("detVOLY",detY);
 
     }
-	G4Material* GetMaterial()
-	{
-		return EJ208;
-	}
-
 
   private:
-    G4VPhysicalVolume *World;
 	G4GDMLParser* Parser;
 	G4GDMLReadStructure* GDMLReader;
     void DefineMaterials();
     G4bool  fCheckOverlaps;
-
+	//G4VUserDetectorConstruction* phantomWorld;
 };
 
 #endif

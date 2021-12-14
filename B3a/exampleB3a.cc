@@ -61,7 +61,13 @@
 #ifdef G4TACC
   #include "G4OpticalParameters.hh"
 #endif
-
+#ifdef HumanoidPhantom
+	#ifndef ICRPModel
+		#include "G4HumanPhantomConstruction.hh"
+	#else
+		#include "ICRP110PhantomConstruction.hh"
+	#endif
+#endif
 
 #include "G4GDMLParser.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,12 +81,12 @@ int main(int argc,char** argv)
   #ifdef VIEWPORT_ONLY
   G4UIExecutive* ui = 0;
   if ( argc == 1 ) {
-    ui = new G4UIExecutive(argc, argv);
+	ui = new G4UIExecutive(argc, argv);
   }
   #else
   G4UIsession* ui = 0;
   if ( argc == 1 ) {
-    ui = new G4UIGAG();
+	ui = new G4UIGAG();
   }
   #endif
 
@@ -96,9 +102,9 @@ int main(int argc,char** argv)
 #ifdef G4MULTITHREADED
   G4MTRunManager* runManager = new G4MTRunManager;
   #ifndef TACC_CORES
-    runManager->SetNumberOfThreads(7);
+	runManager->SetNumberOfThreads(7);
   #else
-    runManager->SetNumberOfThreads(272);
+	runManager->SetNumberOfThreads(272);
   #endif
 #else
   G4RunManager* runManager = new G4RunManager;
@@ -116,9 +122,26 @@ int main(int argc,char** argv)
   //B3DetectorConstruction* det = &detr;
   G4VPhysicalVolume* detVol0 = parser.GetWorldVolume();
   cout << detVol0 << endl;
-  G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser,detVol0);
   
-  runManager->SetUserInitialization(det);
+  //G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
+  //runManager->SetUserInitialization(det);
+
+  #ifdef HumanoidPhantom
+	DetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
+	#ifndef ICRPModel
+		DetectorConstruction* det2 = new G4HumanPhantomConstruction(det);
+		runManager->SetUserInitialization(det2);
+		cout << "DETECTOR1 NAME : " << det->name << endl;
+		cout << "DETECTOR2 NAME : " << det2->name << endl;
+	#else
+		DetectorConstruction* det2 = new ICRP110PhantomConstruction(det);
+		runManager->SetUserInitialization(det2);
+	#endif
+  #else
+	G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
+	runManager->SetUserInitialization(det);
+  #endif // HumanoidPhantom
+
   //
   //runManager->SetUserInitialization(new B3PhysicsList);
 
@@ -126,42 +149,42 @@ int main(int argc,char** argv)
   physicsList->ReplacePhysics(new G4EmStandardPhysics_option4());
   G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
   #ifndef G4TACC
-    #ifdef ScintillationDisable
-    opticalPhysics->SetScintillationYieldFactor(0.);
-    #else
-    opticalPhysics->SetScintillationYieldFactor(1.0);
-    #endif
-    opticalPhysics->SetScintillationExcitationRatio(0.);
+	#ifdef ScintillationDisable
+	opticalPhysics->SetScintillationYieldFactor(0.);
+	#else
+	opticalPhysics->SetScintillationYieldFactor(1.0);
+	#endif
+	opticalPhysics->SetScintillationExcitationRatio(0.);
 
-    opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
-    opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
-    opticalPhysics->SetScintillationByParticleType(false);
-    
-    opticalPhysics->SetMaxNumPhotonsPerStep(100);
-    opticalPhysics->SetMaxBetaChangePerStep(10.0);
+	opticalPhysics->SetTrackSecondariesFirst(kCerenkov,true);
+	opticalPhysics->SetTrackSecondariesFirst(kScintillation,true);
+	opticalPhysics->SetScintillationByParticleType(false);
+	
+	opticalPhysics->SetMaxNumPhotonsPerStep(100);
+	opticalPhysics->SetMaxBetaChangePerStep(10.0);
   #else
-    G4OpticalParameters* optical = G4OpticalParameters::Instance();
-    #ifdef ScintillationDisable
-    optical->SetScintYieldFactor(0.);
-    #else
-    optical->SetScintYieldFactor(1.0);
-    #endif
-    optical->SetScintExcitationRatio(0.);
+	G4OpticalParameters* optical = G4OpticalParameters::Instance();
+	#ifdef ScintillationDisable
+	optical->SetScintYieldFactor(0.);
+	#else
+	optical->SetScintYieldFactor(1.0);
+	#endif
+	optical->SetScintExcitationRatio(0.);
 
-    optical->SetCerenkovTrackSecondariesFirst(true);
-    optical->SetScintTrackSecondariesFirst(true);
-    optical->SetScintByParticleType(false);
-    
-    optical->SetCerenkovMaxPhotonsPerStep(100);
-    optical->SetCerenkovMaxBetaChange(10.0);
+	optical->SetCerenkovTrackSecondariesFirst(true);
+	optical->SetScintTrackSecondariesFirst(true);
+	optical->SetScintByParticleType(false);
+	
+	optical->SetCerenkovMaxPhotonsPerStep(100);
+	optical->SetCerenkovMaxBetaChange(10.0);
   #endif
 
   #ifdef LEGEND
-    #ifndef G4TACC
-    opticalPhysics->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
-    #else
-    optical->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
-    #endif
+	#ifndef G4TACC
+	opticalPhysics->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
+	#else
+	optical->SetWLSTimeProfile("exponential"); // not sure if this should be exponential or delta - need to verify!
+	#endif
   #endif
 
 
@@ -171,7 +194,12 @@ int main(int argc,char** argv)
 
   // Set user action initialization
   //
-  runManager->SetUserInitialization(new B3aActionInitialization(det));  
+	#ifndef HumanoidPhantom
+	  runManager->SetUserInitialization(new B3aActionInitialization(det));  
+	#else
+	  runManager->SetUserInitialization(new B3aActionInitialization(det2));
+	#endif
+  //runManager->SetUserInitialization(new B3aActionInitialization(det));
 
   // Initialize visualization
   //
@@ -197,30 +225,59 @@ int main(int argc,char** argv)
   // Process macro or start UI session
   //
   if ( ! ui ) {
-    // batch mode
-    G4String command = "/control/execute ";
-    G4String fileName = argv[1];
-    UImanager->ApplyCommand(command+fileName);
+	// batch mode
+	G4String command = "/control/execute ";
+	G4String fileName = argv[1];
+	UImanager->ApplyCommand(command+fileName);
   }
   else {
-    // interactive mode
-    UImanager->ApplyCommand("/control/execute init_vis.mac");
-    #ifndef SSRefractionTest
-      #ifndef VIEWPORT_ONLY
-       //UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
-      #endif
-    #else
-      UImanager->ApplyCommand("/vis/viewer/zoom 1024");
-      UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 90 0");
-    #endif
-    #ifdef SingleStrip
-      UImanager->ApplyCommand("/vis/filtering/trajectories/create/particleFilter");
-      UImanager->ApplyCommand("/vis/filtering/trajectories/particleFilter-0/add opticalphoton");
-      //UImanager->ApplyCommand("/cuts/setLowEdge 0.00001 eV");
-      //UImanager->ApplyCommand("/run/initialize"); 
-    #endif
-    ui->SessionStart();
-    delete ui;
+	// interactive mode
+	#ifdef HumanoidPhantom
+		#ifndef ICRPModel
+		// Choose model : ORNL, MIRD, MIX
+		// Choose Sex of Phantom : Male or Female
+			#ifndef ORNL
+				UImanager->ApplyCommand("/phantom/setPhantomModel MIRD");
+				UImanager->ApplyCommand("/phantom/setPhantomSex Female");
+				UImanager->ApplyCommand("/phantom/buildNewPhantom");
+			#else
+				cout << "ORNL Phantom not yet properly implemented" << endl; throw;
+				UImanager->ApplyCommand("/phantom/setPhantomModel ORNLFemale");
+				UImanager->ApplyCommand("/phantom/setPhantomSex Female");
+				UImanager->ApplyCommand("/phantom/buildNewPhantom");
+			#endif
+		#else
+			cout << "ICRP Phantom not yet properly implemented" << endl;
+			// Choose phantom sex(male or female)
+			UImanager->ApplyCommand("/phantom/setPhantomSex female");
+			UImanager->ApplyCommand("/phantom/setScoreWriterSex female");
+			// Choose phantom section(head, trunk or full)
+			UImanager->ApplyCommand("/phantom/setPhantomSection full");
+			UImanager->ApplyCommand("/phantom/setScoreWriterSection full");
+			//UImanager->ApplyCommand("/vis/drawVolume worlds");
+			//UImanager->ApplyCommand("/vis/ogl/set/displayListLimit 4000000");
+		#endif
+	#endif
+	UImanager->ApplyCommand("/control/execute init_vis.mac");
+	#ifdef ICRPModel
+		UImanager->ApplyCommand("/vis/ogl/set/displayListLimit 4000000");
+	#endif
+	#ifndef SSRefractionTest
+	  #ifndef VIEWPORT_ONLY
+	   //UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 20 20");
+	  #endif
+	#else
+	  UImanager->ApplyCommand("/vis/viewer/zoom 1024");
+	  UImanager->ApplyCommand("/vis/viewer/set/viewpointThetaPhi 90 0");
+	#endif
+	#ifdef SingleStrip
+	  UImanager->ApplyCommand("/vis/filtering/trajectories/create/particleFilter");
+	  UImanager->ApplyCommand("/vis/filtering/trajectories/particleFilter-0/add opticalphoton");
+	  //UImanager->ApplyCommand("/cuts/setLowEdge 0.00001 eV");
+	  //UImanager->ApplyCommand("/run/initialize"); 
+	#endif
+	ui->SessionStart();
+	delete ui;
   }
 
 
@@ -232,6 +289,10 @@ int main(int argc,char** argv)
   // Free the store: user actions, physics_list and detector_description are
   // owned and deleted by the run manager, so they should not be deleted
   // in the main() program !
+
+  delete det;
+#ifdef HumanoidPhantom
+#endif
 
   delete visManager;
   delete runManager;  //workaround for segfault here!

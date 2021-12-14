@@ -33,14 +33,13 @@
 
 #include "B3aHistoManager.hh"
 //#include "B3DetectorConstruction.hh"
-#include "GDMLDetectorConstruction.hh"
 #include "DetectorConstruction.hh"
 
 #include "G4UnitsTable.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HistoManager::HistoManager(G4VUserDetectorConstruction* patient)
+HistoManager::HistoManager(DetectorConstruction* patient)
   : fFileName("B3Atest"),fpatient(patient)
 {
   Book();

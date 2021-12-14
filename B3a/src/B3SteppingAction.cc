@@ -39,8 +39,6 @@
 #include "G4RunManager.hh"
 #include "Randomize.hh"
 #include "DetectorConstruction.hh"
-//#include "B3DetectorConstruction.hh"
-#include "GDMLDetectorConstruction.hh"
 #include "B3aHistoManager.hh"
 #include "G4Step.hh"
 #include "G4Event.hh"
@@ -61,7 +59,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B3SteppingAction::B3SteppingAction(B3aEventAction* EvAct, G4VUserDetectorConstruction* patient)
+B3SteppingAction::B3SteppingAction(B3aEventAction* EvAct, DetectorConstruction* patient)
 :G4UserSteppingAction(),fEventAction(EvAct),fpatient(patient)
 { }
 
@@ -565,7 +563,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 								{
 									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
 									#ifdef QuantumEfficiency
-									if (GDMLDetectorConstruction::sipmQE_Hit(lambdaP))
+									if (DetectorConstruction::sipmQE_Hit(lambdaP))
 									{
 									#endif
 										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
