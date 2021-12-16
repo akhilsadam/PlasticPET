@@ -26,7 +26,6 @@
 //
 /// \file B3PrimaryGeneratorAction.cc
 /// \brief Implementation of the B3PrimaryGeneratorAction class
-#include "Version.hh"
 #include "B3PrimaryGeneratorAction.hh"
 
 #include "G4RunManager.hh"
@@ -99,7 +98,7 @@ void B3PrimaryGeneratorAction::CSTtest(double E)
     fParticleGun->SetParticleEnergy(E);  //visible spectrum between 400-700 nm  
     //fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-
+#ifdef BloodRadiation
 G4ThreeVector B3PrimaryGeneratorAction::newPosition()
 {
     for (int i = 0; i < loopMax; i++)
@@ -120,7 +119,7 @@ bool B3PrimaryGeneratorAction::isConfined(G4int x, G4int y, G4int z, G4int matID
 {
     return ICRP110PhantomConstruction::paramPV.InMaterial(x, y, z, matID);
 }
-
+#endif
 void B3PrimaryGeneratorAction::RESETtest()
 {
   #ifdef MultipleStripCell
