@@ -38,6 +38,7 @@
 #include "globals.hh"
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include "G4ThreeVector.hh"
 using namespace std;
 
