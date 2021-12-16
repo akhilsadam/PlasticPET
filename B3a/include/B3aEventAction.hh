@@ -163,22 +163,22 @@ class B3aEventAction : public G4UserEventAction
 
     vector<G4ThreeVector> interactionPosPhot; // global
     vector<G4ThreeVector> interactionPosCompt; // global
-    vector<vector<double>> interactionPos; // x,y,z,photonCount,t,gammaID // global
-    vector<vector<double>> interactionPosTrack; 
+    vector<array<double,6>> interactionPos; // x,y,z,photonCount,t,gammaID // global
+    //vector<vector<double>> interactionPosTrack; 
     vector<int> gammaProcessIDList; // compton,photo, or other (0,1,2)
-    map<G4int,G4ThreeVector> detectedPosition; // pid->global ThreeVector Position.
-    map<G4int,G4int> detPhotonType; // photon pid->gamma interaction type.
-    map<G4int,G4int> parentTrack; // key: currentID, value: parentID
-    map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: global vertexPosition
+    unordered_map<G4int,G4ThreeVector> detectedPosition; // pid->global ThreeVector Position.
+    unordered_map<G4int,G4int> detPhotonType; // photon pid->gamma interaction type.
+    unordered_map<G4int,G4int> parentTrack; // key: currentID, value: parentID
+    unordered_map<G4int,G4ThreeVector> vertexPosition; // key: currentID, value: global vertexPosition
     vector<G4int> photonIDList; // list of all currentIDs
     vector<G4int> detPhotonIDList; // list of all currentIDs detected
     G4int particleIDnum;
     vector<G4int> gammaID;
     G4int gammaIDCounter = 0;
     G4double threshold = 0.00001;
-    vector<vector<double>> photonSiPMData; //(X,Y,Z,T,A,L)
-    vector<vector<double>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle, processName)
-    map<G4int,G4ThreeVector> electronStartPosition; //(electron id, starting position)
+    vector<array<double,6>> photonSiPMData; //(X,Y,Z,T,A,L)
+    vector<array<double,9>> photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle, processName)
+    unordered_map<G4int,G4ThreeVector> electronStartPosition; //(electron id, starting position)
     vector<double> electronPath; // (double pathlength)
     vector<G4ThreeVector> electronDisplace; // (x,y,z displacement)
     //vector<int> photonReflectProcess; // as above, but process name.

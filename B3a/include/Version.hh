@@ -44,6 +44,9 @@ const string detectorRightName = "detVOLR";
 const string scintillatorName = "S_EJ208";
 const string vikuitiName = "S_Vikuiti";
 
+const size_t maxVecSize = 4000;
+const size_t loopMax = 300;
+
 const double  att_len = 400*cm;
 #ifndef OUTPATH
     #define OUTPATH
@@ -99,6 +102,7 @@ const double  att_len = 400*cm;
     #ifdef HumanoidPhantom
         #undef recalculateCrossSections
         #define ICRPModel
+        #define BloodRadiation
     #endif
 
     #ifdef SingleArrayTest

@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # Setup the project
 #
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(B3a)
 
 #----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ endif()
 # Setup include directory for this project
 #
 set(CMAKE_CXX "g++")
-set(CMAKE_CXX_FLAGS "-g -std=c++17 -O0 -w") #turn off -w to see warnings
+set(CMAKE_CXX_FLAGS "-pg -std=c++17 -O0 -w") #turn off -w to see warnings
 include(${Geant4_USE_FILE})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/includePhantom)

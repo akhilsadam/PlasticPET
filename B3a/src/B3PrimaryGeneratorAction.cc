@@ -39,7 +39,9 @@
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
 #include "G4RandomDirection.hh"
-
+#ifdef BloodRadiation
+    #include "ICRP110PhantomConstruction.hh"
+#endif
 #include <ctime> 
 #include <cstdlib>
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -97,6 +99,28 @@ void B3PrimaryGeneratorAction::CSTtest(double E)
     fParticleGun->SetParticleEnergy(E);  //visible spectrum between 400-700 nm  
     //fParticleGun->GeneratePrimaryVertex(anEvent);
 }
+
+G4ThreeVector B3PrimaryGeneratorAction::newPosition()
+{
+    for (int i = 0; i < loopMax; i++)
+    {
+        G4double x = (length_X * (G4UniformRand() - 0.5));
+        G4double y = (length_Y * (G4UniformRand() - 0.5));
+        G4double z = (G4UniformRand()) * length_Z;
+        if (isConfined(x, y, z))
+        {
+            return G4ThreeVector(x, y, z);
+        }
+    }
+    G4cout << "[ERROR] : cannot find a position to fire gammas from!" << G4endl;
+    throw("");
+}
+
+bool B3PrimaryGeneratorAction::isConfined(G4int x, G4int y, G4int z, G4int matID)
+{
+    return ICRP110PhantomConstruction::paramPV.InMaterial(x, y, z, matID);
+}
+
 void B3PrimaryGeneratorAction::RESETtest()
 {
   #ifdef MultipleStripCell
@@ -155,22 +179,27 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
   //create vertex
   //
   #ifdef MultipleStripCell
-  G4double x0  = 0*cm;
-    #ifndef ZPredictorTest
-    G4double z0  = length_D/2;
+    #ifndef BloodRadiation
+        G4double x0  = 0*cm;
+        #ifndef ZPredictorTest
+        G4double z0  = length_D/2;
+        #else
+        G4double z0  = (G4UniformRand())*length_Z;
+        #endif
+        #ifndef YPredictorTest
+        G4double y0  = 0*cm;
+        #else
+        G4double y0  = (length_Y*(G4UniformRand()-0.5));
+        #endif
+        #ifdef SensitivityScan
+          z0  = (G4UniformRand())*length_Z;
+          x0  = (G4UniformRand())*R_0;
+        #endif
+    fParticleGun->SetParticlePosition(G4ThreeVector(x0, y0, z0));
     #else
-    G4double z0  = (G4UniformRand())*length_Z;
+    fParticleGun->SetParticlePosition(newPosition());
     #endif
-    #ifndef YPredictorTest
-    G4double y0  = 0*cm;
-    #else
-    G4double y0  = (length_Y*(G4UniformRand()-0.5));
-    #endif
-    #ifdef SensitivityScan
-      z0  = (G4UniformRand())*length_Z;
-      x0  = (G4UniformRand())*R_0;
-    #endif
-  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  
 
   #ifdef RadialSource
     G4ThreeVector randDir = G4RandomDirection().unit();

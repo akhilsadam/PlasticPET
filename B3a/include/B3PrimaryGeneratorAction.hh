@@ -32,6 +32,7 @@
 
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
+#include "G4ThreeVector.hh"
 #include "globals.hh"
 
 class G4ParticleGun;
@@ -54,6 +55,9 @@ class B3PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
     const G4ParticleGun* GetParticleGun() const { return fParticleGun; }
     void CSTtest(double E);
     void RESETtest();
+
+    G4ThreeVector newPosition();
+    bool isConfined(G4int x, G4int y, G4int z, G4int matID = 28);
 
   private:
     G4ParticleGun*  fParticleGun;

@@ -77,7 +77,48 @@ B3aEventAction::B3aEventAction(B3aRunAction* runAction,B3PrimaryGeneratorAction*
    fCollID_cryst_en(-1),
 */
    fCollID_patient(-1)
-{}
+{
+
+    ///vector<G4ThreeVector> 
+    interactionPosPhot.reserve(maxVecSize); // global
+    //vector<G4ThreeVector> 
+    interactionPosCompt.reserve(maxVecSize); // global
+    //vector<vector<double>> 
+    //interactionPos; // x,y,z,photonCount,t,gammaID // global
+    //vector<vector<double>> 
+    //interactionPosTrack;
+    //vector<int> 
+    gammaProcessIDList.reserve(maxVecSize); // compton,photo, or other (0,1,2)
+    //map<G4int, G4ThreeVector> 
+    //detectedPosition; // pid->global ThreeVector Position.
+    //map<G4int, G4int> 
+    //detPhotonType; // photon pid->gamma interaction type.
+    //map<G4int, G4int> 
+    //parentTrack; // key: currentID, value: parentID
+    //map<G4int, G4ThreeVector> 
+    //vertexPosition; // key: currentID, value: global vertexPosition
+    //vector<G4int> 
+    photonIDList.reserve(maxVecSize); // list of all currentIDs
+    //vector<G4int> 
+    detPhotonIDList.reserve(maxVecSize); // list of all currentIDs detected
+    //vector<G4int> 
+    gammaID.reserve(maxVecSize);
+    //vector<vector<double>> 
+    //photonSiPMData; //(X,Y,Z,T,A,L)
+    //vector<vector<double>> 
+    //photonReflectData; //(X,Y,Z,T,alive/dead, id, incident angle, reflected angle, processName)
+    //map<G4int, G4ThreeVector> 
+    //electronStartPosition; //(electron id, starting position)
+    //vector<double> 
+    electronPath.reserve(maxVecSize); // (double pathlength)
+    //vector<G4ThreeVector> 
+    electronDisplace.reserve(maxVecSize); // (x,y,z displacement)
+    //vector<string> 
+    electronProcessName.reserve(maxVecSize); // electron process name;
+    //vector<int> 
+    electronProcess.reserve(maxVecSize); // trackID
+
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -308,7 +349,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     //G4cout << "(" << x <<" "<<y<<" "<<z<<")";
     for(int i = 0; i < interactionPos.size();i++)
     {
-      vector<G4double> pos = interactionPos[i];
+      auto pos = interactionPos[i];
       G4double diff = pow((pos[0]-x),2)+pow((pos[1]-y),2)+pow((pos[2]-z),2);
       diffs.push_back(diff);
       //G4cout << diff << " ";
@@ -359,7 +400,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
   
   string psmFile = outpath+("photonSiPMData.txt");
   std::ofstream photonSiPM(psmFile, std::ios_base::app);
-  for(vector<double> pos : photonSiPMData)
+  for(auto pos : photonSiPMData)
   {
     for(int u =0; u<pos.size(); u++)
     {
@@ -382,7 +423,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
     photonReflectC << photonIDList.size() << endl;
     photonReflectC.close();
     std::ofstream photonReflect(reflectfile, std::ios_base::app);
-    for(vector<double> pos : photonReflectData)
+    for(auto pos : photonReflectData)
     {
       for(int u =0; u<pos.size(); u++)
       {
@@ -396,7 +437,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt )
 
     for(int i = 0; i<6;i++)
     {
-      for(vector<G4double> pos : interactionPos)
+      for(auto pos : interactionPos)
       {
         beamInteract << pos[i] << " "; // note that this is in global coordinates!
       }
