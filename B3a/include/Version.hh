@@ -103,7 +103,7 @@ const double  eps_sf = pi / 9;
     #ifdef HumanoidPhantom
         #undef recalculateCrossSections
         #define ICRPModel
-        #define BloodRadiation
+        #define BodyPartRadiation
     #endif
 
     #ifdef SingleArrayTest

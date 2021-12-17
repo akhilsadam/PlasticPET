@@ -38,7 +38,7 @@
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
 #include "G4RandomDirection.hh"
-#ifdef BloodRadiation
+#ifdef BodyPartRadiation
     #include "ICRP110PhantomConstruction.hh"
 #endif
 #include <ctime> 
@@ -98,7 +98,7 @@ void B3PrimaryGeneratorAction::CSTtest(double E)
     fParticleGun->SetParticleEnergy(E);  //visible spectrum between 400-700 nm  
     //fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-#ifdef BloodRadiation
+#ifdef BodyPartRadiation
 G4ThreeVector B3PrimaryGeneratorAction::newPosition()
 {
     for (int i = 0; i < loopMax; i++)
@@ -178,7 +178,7 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
   //create vertex
   //
   #ifdef MultipleStripCell
-    #ifndef BloodRadiation
+    #ifndef BodyPartRadiation
         G4double x0  = 0*cm;
         #ifndef ZPredictorTest
         G4double z0  = length_D/2;
