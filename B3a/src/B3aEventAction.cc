@@ -507,7 +507,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt)
     }
     string sfract = outpath + ("scatterfraction.txt");
     std::ofstream sfStream(sfract, std::ios_base::app);
-    if ((gcheck >= -10) && (gcheck =< 10))
+    if ((gcheck >= -10) && (gcheck <= 10))
     {
         sfStream << 0 << endl;
     }
