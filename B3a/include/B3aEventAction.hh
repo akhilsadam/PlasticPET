@@ -186,6 +186,10 @@ class B3aEventAction : public G4UserEventAction
     vector<string> electronProcessName; // electron process name;
     vector<int> electronProcess; // trackID
 
+    //scatter fraction
+    unordered_map<G4int, G4ThreeVector> final_gamma_position;
+    // have a 6-vector of pos,dir for gamma_shot.
+
     G4int VolAbsorption;
     G4int BoundAbsorption;
     G4int Rayleigh;

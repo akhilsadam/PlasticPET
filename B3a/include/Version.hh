@@ -48,6 +48,7 @@ const size_t maxVecSize = 4000;
 const size_t loopMax = 300;
 
 const double  att_len = 400*cm;
+const double  eps_sf = pi / 18;
 #ifndef OUTPATH
     #define OUTPATH
     const std::string outpath = "../../data/current/";

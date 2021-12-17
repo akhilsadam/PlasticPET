@@ -372,6 +372,10 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 
 			}
 		}
+		if ((track->GetTrackStatus() == fStopAndKill) || (track->GetTrackStatus() == fKillTrackAndSecondaries))
+		{
+			fEventAction->final_gamma_position[currentTrackID] = P2;
+		}
 	}
 
 	 //example of saving random number seed of this event, under condition
