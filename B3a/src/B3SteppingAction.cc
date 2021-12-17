@@ -347,7 +347,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 				
 				//G4cout<<(ps->GetProcessName())<<G4endl;
 				// analysisManager->FillH2(14, (xyzS.x()),(xyzS.y()), 1);
-				fEventAction->interactionPos.push_back({x,y,z,0,postPoint->GetGlobalTime()/ns,track->GetTrackID()});//postPoint->GetLocalTime()
+				fEventAction->interactionPos.push_back({x,y,z,0,postPoint->GetGlobalTime()/ns,static_cast<double>(track->GetTrackID())});//postPoint->GetLocalTime()
 				G4int gammaProcessID = 2;
 				if(psNm.compare("phot")==0)
 				{
@@ -570,7 +570,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 									if (DetectorConstruction::sipmQE_Hit(lambdaP))
 									{
 									#endif
-										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
+										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,static_cast<double>(detA),lambdaP});
 										fEventAction->detPhotonIDList.push_back(pid);
 										fEventAction->detectedPosition[pid] = {x,y,z};
 										if(vol.find(detectorRightName) == std::string::npos)
