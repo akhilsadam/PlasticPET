@@ -490,7 +490,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt)
     {
         G4ThreeVector gdir = final_gamma_position[gid] - G4ThreeVector(beamData[0], beamData[1], beamData[2]);
         double angle = gdir.angle(G4ThreeVector(beamData[3], beamData[4], beamData[5]));
-        G4cout << "ANGLE : " << angle << G4endl;
+        //G4cout << "ANGLE : " << angle << G4endl;
         if (fabs(angle) < eps_sf)
         {
             gcheck += -1;
@@ -507,7 +507,7 @@ void B3aEventAction::EndOfEventAction(const G4Event* evt)
     }
     string sfract = outpath + ("scatterfraction.txt");
     std::ofstream sfStream(sfract, std::ios_base::app);
-    if ((gcheck == 0) || (gcheck == 1) || (gcheck == -1))
+    if ((gcheck >= -10) && (gcheck =< 10))
     {
         sfStream << 0 << endl;
     }
