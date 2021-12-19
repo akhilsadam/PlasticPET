@@ -174,7 +174,7 @@ ComputeDimensions( G4Box& box, const G4int, const G4VPhysicalVolume* ) const
     box.SetZHalfLength(fdZ);
 }
 
-bool ICRP110PhantomNestedParameterisation::InMaterial(const G4int x, const G4int y, const G4int z, const std::size_t mat)
+bool ICRP110PhantomNestedParameterisation::InMaterial(const G4double x, const G4double y, const G4double z, const std::size_t mat)
 {
     G4int ix = (x/fdX + fnX - 1)/2;
     G4int iy = (y / fdY + fnY - 1) / 2;
@@ -186,8 +186,8 @@ bool ICRP110PhantomNestedParameterisation::InMaterial(const G4int x, const G4int
         return false;
     std::size_t matIndex = GetMaterialIndex(copyID);
 
-    //G4cout << "ix: "<< ix << ", iy: " << iy << ", iz:" << iz<< G4endl;
-    //G4cout << "copyID from the Nested Param: "<< copyID << ", mat: " << matIndex << G4endl;
+    G4cout << "ix: "<< ix << ", iy: " << iy << ", iz:" << iz<< G4endl;
+    G4cout << "copyID from the Nested Param: "<< copyID << ", mat: " << matIndex << G4endl;
 
     return (matIndex == mat);
 }

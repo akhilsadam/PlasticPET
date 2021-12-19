@@ -115,7 +115,7 @@ G4ThreeVector B3PrimaryGeneratorAction::newPosition()
     throw("");
 }
 
-bool B3PrimaryGeneratorAction::isConfined(G4int x, G4int y, G4int z, G4int matID)
+bool B3PrimaryGeneratorAction::isConfined(G4double x, G4double y, G4double z, G4int matID)
 {
     return ICRP110PhantomConstruction::paramPV.InMaterial(x, y, z, matID);
 }

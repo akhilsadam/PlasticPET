@@ -60,7 +60,7 @@ class B3PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 #ifdef BodyPartRadiation
     // 28 is blood, 32 is brain
     G4ThreeVector newPosition();
-    bool isConfined(G4int x, G4int y, G4int z, G4int matID = 32);
+    bool isConfined(G4double x, G4double y, G4double z, G4int matID = 32);
 #endif
   private:
     G4ParticleGun*  fParticleGun;

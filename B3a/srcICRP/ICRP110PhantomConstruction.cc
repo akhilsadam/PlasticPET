@@ -50,6 +50,8 @@
 #include "G4PVParameterised.hh"
 #include "ICRP110PhantomNestedParameterisation.hh"
 
+#include "Version.hh"
+
 ICRP110PhantomNestedParameterisation ICRP110PhantomConstruction::paramPV;
 
 ICRP110PhantomConstruction::ICRP110PhantomConstruction(DetectorConstruction* detector) :
@@ -286,7 +288,11 @@ G4VPhysicalVolume* ICRP110PhantomConstruction::Construct()
     G4LogicalVolume* logYRep = new G4LogicalVolume(solYRep, matAir, yRepName);
     new G4PVReplica(yRepName, logYRep, fContainer_logic, kYAxis, fNVoxelY, fVoxelHalfDimY * 2.);
 
+#ifndef VisiblePhantom
     logYRep->SetVisAttributes(new G4VisAttributes(G4VisAttributes::GetInvisible()));
+#else
+    logYRep->SetVisAttributes(new G4VisAttributes(G4Colour(1., 1., 1., 0.5)));
+#endif
 
     //--- Slice the phantom along X axis 
     G4String xRepName("RepX");
@@ -295,7 +301,11 @@ G4VPhysicalVolume* ICRP110PhantomConstruction::Construct()
     G4LogicalVolume* logXRep = new G4LogicalVolume(solXRep, matAir, xRepName);
     new G4PVReplica(xRepName, logXRep, logYRep, kXAxis, fNVoxelX, fVoxelHalfDimX * 2.);
 
+#ifndef VisiblePhantom
     logXRep->SetVisAttributes(new G4VisAttributes(G4VisAttributes::GetInvisible()));
+#else
+    logXRep->SetVisAttributes(new G4VisAttributes(G4Colour(1., 1., 1., 0.5)));
+#endif
 
     //----- Voxel solid and logical volumes
     //--- Slice along Z axis 

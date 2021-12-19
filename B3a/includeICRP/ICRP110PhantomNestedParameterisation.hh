@@ -101,7 +101,7 @@ public:
                          const G4VPhysicalVolume *) const;
   
 
-  bool InMaterial(const G4int x, const G4int y, const G4int z, const std::size_t mat);
+  bool InMaterial(const G4double x, const G4double y, const G4double z, const std::size_t mat);
 
   
 private:  // Dummy declarations to get rid of warnings ...
