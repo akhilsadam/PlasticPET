@@ -186,8 +186,8 @@ bool ICRP110PhantomNestedParameterisation::InMaterial(const G4double x, const G4
         return false;
     std::size_t matIndex = GetMaterialIndex(copyID);
 
-    G4cout << "ix: "<< ix << ", iy: " << iy << ", iz:" << iz<< G4endl;
-    G4cout << "copyID from the Nested Param: "<< copyID << ", mat: " << matIndex << G4endl;
+    //G4cout << "ix: "<< ix << ", iy: " << iy << ", iz:" << iz<< G4endl;
+    //G4cout << "copyID from the Nested Param: "<< copyID << ", mat: " << matIndex << G4endl;
 
     return (matIndex == mat);
 }

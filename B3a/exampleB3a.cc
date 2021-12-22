@@ -138,7 +138,7 @@ int main(int argc,char** argv)
 		runManager->SetUserInitialization(det2);
 	#endif
   #else
-	G4VUserDetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
+	DetectorConstruction* det = new GDMLDetectorConstruction(parser, detVol0);
 	runManager->SetUserInitialization(det);
   #endif // HumanoidPhantom
 

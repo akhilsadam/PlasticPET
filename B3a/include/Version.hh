@@ -99,7 +99,9 @@ const double  eps_sf = pi / 9;
     //#define ReflectionTracking // saves data on photon reflections/absorptions
     //#define ElectronPathLength // saves data on electron mean displacement and path length -- needs thread locking!
 
-    #define HumanoidPhantom // make sure to disable the recalculation of cross sections (recalculateCrossSections)
+    #ifndef NoPhantom
+        #define HumanoidPhantom // make sure to disable the recalculation of cross sections (recalculateCrossSections)
+    #endif
     #ifdef HumanoidPhantom
         #undef recalculateCrossSections
         #define ICRPModel
