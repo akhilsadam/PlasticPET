@@ -1,8 +1,0 @@
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/install/local.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/edit_cache.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/install.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/list_install_components.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/rebuild_cache.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/B3a.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/install/strip.dir
-/home/mitt-unix/Bureau/Desktop/Geant4/PlasticPET/src/B3a/build/CMakeFiles/exampleB3a.dir

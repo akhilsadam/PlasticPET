@@ -194,7 +194,14 @@ if (particle == G4ChargedGeantino::ChargedGeantino()) {
           z0  = (G4UniformRand())*length_Z;
           x0  = (G4UniformRand())*R_0;
         #endif
+    #ifdef xshift
+          x0 = x0 + source_xshift;
+    #endif
+    #ifdef zshift
+          z0 = z0 + source_zshift;
+    #endif
     fParticleGun->SetParticlePosition(G4ThreeVector(x0, y0, z0));
+    fParticleGun2->SetParticlePosition(G4ThreeVector(x0, y0, z0));
     #else
     fParticleGun->SetParticlePosition(newPosition());
     #endif

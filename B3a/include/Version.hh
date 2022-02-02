@@ -80,6 +80,13 @@ const double  eps_sf = pi / 9;
     const double y_Energy = GammaEnergy*keV;
 #endif
 
+#ifdef xshift
+    const double source_xshift = xshift*mm;
+#endif
+#ifdef zshift
+    const double source_zshift = zshift * mm;
+#endif
+
 
 // ....oooOO0OOooo........oooOO0OOooo...|SIM-TYPE\...oooOO0OOooo........oooOO0OOooo......
     #define G4MULTITHREADED
