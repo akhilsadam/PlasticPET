@@ -117,6 +117,9 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
  	G4ThreeVector P2 = postPoint->GetPosition();
  	G4ThreeVector point = P1 + G4UniformRand()*(P2 - P1);
 	if (track->GetDefinition()->GetPDGCharge() == 0.) point = P2;
+	G4double xp1 = P1.x();
+	G4double yp1 = P1.y();
+	G4double zp1 = P1.z();
 	G4double x = P2.x();
  	G4double y = P2.y();
  	G4double z = P2.z();
@@ -341,7 +344,22 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 		if(size>0)
 		{
 			ps = postPoint->GetProcessDefinedStep();
-			if((ps) && (step->GetStepLength()>0))
+			#ifdef checkGamma
+				bool b2 = false;
+				G4String vol4 = currentVolume->GetLogicalVolume()->GetName();
+				if ((vol4.find(scintillatorName) != std::string::npos) || (vol4.find(vikuitiName) != std::string::npos))
+				{
+					b2 = true;
+				}
+			#endif
+			if((ps)
+				#ifdef checkGammaStepLength
+				&& (step->GetStepLength()>0)
+				#endif
+				#ifdef checkGamma
+				&& (b2)
+				#endif
+				)
 			{
 				G4String psNm = ps->GetProcessName();
 				
@@ -514,7 +532,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 								{
 									rid = 4;
 									G4double lambdaP = (h*c)/(Eprim*1000*nanop);
-									fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS,z(),prePoint->GetGlobalTime()/ns,detA,lambdaP});
+									fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS,z(),postPoint->GetGlobalTime()/ns,detA,lambdaP});
 									fEventAction->detPhotonIDList.push_back(pid);
 									fEventAction->detectedPosition[pid] = {x,y,z};
 									if(vol.find(detectorRightName) == std::string::npos)
@@ -570,7 +588,7 @@ void B3SteppingAction::UserSteppingAction(const G4Step* step)
 									if (DetectorConstruction::sipmQE_Hit(lambdaP))
 									{
 									#endif
-										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),prePoint->GetGlobalTime()/ns,static_cast<double>(detA),lambdaP});
+										fEventAction->photonSiPMData.push_back({xyzS.x(),xyzS.y(),xyzS.z(),postPoint->GetGlobalTime()/ns,static_cast<double>(detA),lambdaP});
 										fEventAction->detPhotonIDList.push_back(pid);
 										fEventAction->detectedPosition[pid] = {x,y,z};
 										if(vol.find(detectorRightName) == std::string::npos)

@@ -132,6 +132,9 @@ const double  eps_sf = pi / 9;
         #define YPredictorTest // plots graphs to find the (and X) Y-location of the gamma! Will vary Y-position of Gamma hit!
     #endif
 
+    #define checkGamma // makes sure gamma is in either scintillator or reflector before logging interaction.
+    // #define checkGammaStepLength // makes sure gamma has had a step of non-zero length before logging interaction (use checkGamma if disabled)
+
     //#define LEGEND
 // ....oooOO0OOooo........oooOO0OOooo...|MAT-TYPE\...oooOO0OOooo........oooOO0OOooo......
     //#define LYSOTest // swaps scintillator material to LYSO

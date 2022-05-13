@@ -139,12 +139,13 @@ class GDMLDetectorConstruction : public DetectorConstruction
 const G4int n = 6;
 const G4int n2 = 10;
 G4double PhotonEnergy[n] = {3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV}; //visible spectrum (400,420,435,460,480,520)nm
+G4double GPhotonEnergy[n+1] = {511*keV, 3.105 * eV,2.95714 * eV,2.855 * eV,2.7 * eV,2.5875 * eV,2.388 * eV };
 G4double TPBPhotonEnergy[n2] = {12.3985*eV,6.19926*eV,4.1328*eV,3.5424*eV,3.105*eV,2.95714*eV,2.855*eV,2.7*eV,2.5875*eV,2.388*eV};//visible spectrum (100,200,300,350,400,420,435,460,480,520)nm
 
 G4double refractive_index_vk[n] = {1.6,1.6,1.6,1.6,1.6,1.6};
 G4double att_length_vk[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
 
-G4double refractive_index_ej[n] = {1.58,1.58,1.58,1.58,1.58,1.58};
+G4double refractive_index_ej[n+1] = {1,1.58,1.58,1.58,1.58,1.58,1.58};
 G4double att_length_ej[n] = {400*cm,400*cm,400*cm,400*cm,400*cm,400*cm};
 
 //Spectroscopic and travelling-wave lasing characterisation of tetraphenylbenzidine and di-naphtalenyl-diphenylbenzidine
@@ -285,7 +286,7 @@ G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
 	vkMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_vk,n);
 	detMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_air,n);
 	vkMPT->AddProperty("ABSLENGTH", PhotonEnergy,att_length_vk,n);
-	scintMPT->AddProperty("RINDEX", PhotonEnergy,refractive_index_ej,n);
+	scintMPT->AddProperty("RINDEX", GPhotonEnergy,refractive_index_ej,n+1);
 
 	tpbMPT->AddProperty("RINDEX", TPBPhotonEnergy,refractive_index_tpb,n2);
 	tpbMPT->AddProperty("WLSABSLENGTH", TPBPhotonEnergy,att_length_tpb,n2);
@@ -313,7 +314,7 @@ G4double efficiency2[n2] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0};
  	scintMPT->AddConstProperty("FASTTIMECONSTANT", 3.3 * ns);
 	scintMPT->AddConstProperty("YIELDRATIO", 1.0);
 	vkMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_vk, n);
-	scintMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_vk, n); //WHAT is the EJ reflectivity?
+	scintMPT->AddProperty("REFLECTIVITY", PhotonEnergy, reflectivity_ej, n); //WHAT is the EJ reflectivity?
 	#endif
 
 	Air->SetMaterialPropertiesTable(airMPT);
